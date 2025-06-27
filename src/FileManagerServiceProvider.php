@@ -3,16 +3,23 @@
 namespace M2code\FileManager;
 
 use Illuminate\Support\ServiceProvider;
+use M2code\FileManager\Console\TestUploadCommand;
+use M2code\FileManager\Core\FileDriverResolver;
+use M2code\FileManager\Domain\Contracts\FileSaver;
 
 class FileManagerServiceProvider extends ServiceProvider
 {
 
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__.'/config/file-manger.php', 'file-manager');
+        $this->mergeConfigFrom(__DIR__.'/config/file-manager.php', 'file-manager');
+
+        $this->app->bind(FileSaver::class, function () {
+            return FileDriverResolver::resolve();
+        });
 
         $this->app->singleton('file-manager', function () {
-            return \M2code\FileManager\Core\FileDriverResolver::resolve();
+            return FileDriverResolver::resolve();
         });
     }
 
@@ -24,7 +31,7 @@ class FileManagerServiceProvider extends ServiceProvider
 
         if ($this->app->runningInConsole()) {
             $this->commands([
-                \M2code\FileManager\Console\TestUploadCommand::class
+                TestUploadCommand::class
             ]);
         }
     }

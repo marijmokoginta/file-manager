@@ -3,12 +3,16 @@
 namespace M2code\FileManager\Core;
 
 use http\Exception\RuntimeException;
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Support\Facades\Config;
 use M2code\FileManager\Domain\Contracts\FileSaver;
 
 class FileDriverResolver
 {
-    public static function resolve(string $contract = FileSaver::class): object
+    /**
+     * @throws BindingResolutionException
+     */
+    public static function resolve(string $contract  = FileSaver::class): object
     {
         $drivers = Config::get('file-manager.drivers', []);
         $active = Config::get('file-manager.default_driver', 'local');
