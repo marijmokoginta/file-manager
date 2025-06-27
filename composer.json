@@ -8,6 +8,16 @@
             "M2code\\FileManager\\": "src/"
         }
     },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "M2code\\FileManager\\FileManagerServiceProvider"
+            ],
+            "aliases": {
+                "FileManager": "M2code\\FileManager\\Facades\\FileManager"
+            }
+        }
+    },
     "authors": [
         {
             "name": "marijmokoginta",
@@ -20,6 +30,8 @@
         "illuminate/support": "^10.0|^11.0",
         "illuminate/http": "^10.0|^11.0",
         "illuminate/filesystem": "^10.0|^11.0",
-        "kornrunner/blurhash": "^1.1"
+        "illuminate/console": "^10.0|^11.0",
+        "kornrunner/blurhash": "^1.1",
+        "ext-http": "*"
     }
 }
