@@ -24,4 +24,19 @@ class FileSaverTest extends TestCase
 
         Storage::disk('public')->assertExists($result->filePath);
     }
+
+    public function test_it_cannot_save_file_with_no_available_handler()
+    {
+        Storage::fake('public');
+
+        $file = UploadedFile::fake()->create('dummy', 2, 'txt');
+
+        $this->assertThrows(
+            function () use ($file) {
+                FileManager::save($file, 'testing');
+            },
+            \RuntimeException::class,
+            'No handler available for this file type.'
+        );
+    }
 }
