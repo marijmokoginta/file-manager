@@ -2,11 +2,11 @@
 
 namespace M2code\FileManager\DTO;
 
-readonly class UploadedFileResult
+readonly class ImageUploadResult
 {
     public function __construct(
-        public string $url,
-        public ?string $lowQualityUrl = null,
+        public string  $path,
+        public ?string $lowQualityPath = null,
         public ?string $blurhash = null
     ) {}
 }

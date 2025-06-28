@@ -22,8 +22,8 @@ class FileUploadTest extends TestCase
             ->upload($file, 'testing');
 
         assertNotNull($res);
-        assertNotNull($res->url);
-        assertNotNull($res->lowQualityUrl);
+        assertNotNull($res->path);
+        assertNotNull($res->lowQualityPath);
         assertNotNull($res->blurhash);
     }
 }

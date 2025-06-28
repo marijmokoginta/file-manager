@@ -4,8 +4,7 @@ namespace M2code\FileManager\Application\Uploader;
 
 use M2code\FileManager\Application\Image\ImageProcessor;
 use M2code\FileManager\Domain\Contracts\FileSaver;
-use M2code\FileManager\Domain\Contracts\FileUrlGenerator;
-use M2code\FileManager\DTO\UploadedFileResult;
+use M2code\FileManager\DTO\ImageUploadResult;
 
 class ImageUploader
 {
@@ -15,8 +14,7 @@ class ImageUploader
 
     public function __construct(
         protected FileSaver $driver,
-        protected ImageProcessor $processor,
-        protected FileUrlGenerator $urlGenerator
+        protected ImageProcessor $processor
     ) {}
 
     public static function make(): self
@@ -28,7 +26,7 @@ class ImageUploader
     public function enableWatermark(): self { $this->watermark = true; return $this; }
     public function enableLowQuality(): self { $this->lowQuality = true; return $this; }
 
-    public function upload($file, string $folder): UploadedFileResult
+    public function upload($file, string $folder): ImageUploadResult
     {
         $variants = $this->processor
             ->reset()
@@ -39,15 +37,15 @@ class ImageUploader
 
         $original = $this->driver->save($file, $folder);
 
-        $lowQualityUrl = null;
+        $lowQualityPath = null;
         if ($variants->low) {
             $originalLow = $this->driver->save($variants->low, $folder);
-            $lowQualityUrl = $this->urlGenerator->generate($originalLow->filePath);
+            $lowQualityPath = $originalLow->filePath;
         }
 
-        return new UploadedFileResult(
-            url: $this->urlGenerator->generate($original->filePath),
-            lowQualityUrl: $lowQualityUrl,
+        return new ImageUploadResult(
+            path: $original->filePath,
+            lowQualityPath: $lowQualityPath,
             blurhash: $variants->blurhash ?? null
         );
     }
