@@ -6,13 +6,13 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use M2code\FileManager\Facades\FileManager;
 use M2code\FileManager\tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
+use RuntimeException;
 use function PHPUnit\Framework\assertNotNull;
 
 class FileSaverTest extends TestCase
 {
-    /**
-     * @test
-     */
+    #[Test]
     public function test_it_can_save_a_file_using_local_driver()
     {
         Storage::fake('public');
@@ -35,7 +35,7 @@ class FileSaverTest extends TestCase
             function () use ($file) {
                 FileManager::save($file, 'testing');
             },
-            \RuntimeException::class,
+            RuntimeException::class,
             'No handler available for this file type.'
         );
     }

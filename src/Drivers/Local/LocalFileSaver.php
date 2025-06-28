@@ -10,7 +10,7 @@ use M2code\FileManager\Support\FileExtensionHelper;
 
 class LocalFileSaver implements FileSaver
 {
-    protected $disk;
+    protected string $disk;
 
     public function __construct(array $config = [])
     {
