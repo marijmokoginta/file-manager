@@ -15,6 +15,9 @@ class LocalFileUrlGenerator implements FileUrlGenerator
 
     public function generate(string $path): string
     {
-        return 'file_url';
+        return route('file-manager.serve', [
+            'disk' => $this->disk,
+            'path' => base64_encode(ltrim($path, '/')),
+        ]);
     }
 }

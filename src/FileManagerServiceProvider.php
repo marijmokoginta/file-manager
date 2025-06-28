@@ -43,6 +43,8 @@ class FileManagerServiceProvider extends ServiceProvider
             __DIR__.'/config/file-manager.php' => config_path('file-manager.php')
         ], 'config');
 
+        $this->loadRoutesFrom(__DIR__.'/Http/routes.php');
+
         if ($this->app->runningInConsole()) {
             $this->commands([
                 TestUploadCommand::class
