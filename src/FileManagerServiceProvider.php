@@ -35,6 +35,10 @@ class FileManagerServiceProvider extends ServiceProvider
         $this->app->singleton(FileUrlGenerator::class, function () {
             return FileUrlGeneratorResolver::resolve();
         });
+
+        $this->app->singleton('file-url', function () {
+            return app(FileUrlGenerator::class);
+        });
     }
 
     public function boot(): void

@@ -2,13 +2,14 @@
 
 namespace M2code\FileManager\Application\FileRouter;
 
+use Illuminate\Support\Collection;
 use M2code\FileManager\Domain\Contracts\FileSaver;
 use M2code\FileManager\DTO\FileOperationResult;
 use RuntimeException;
 
 class FileTypeRouterService implements FileSaver
 {
-    protected $handlers;
+    protected Collection $handlers;
 
     public function __construct(array $handlers)
     {
