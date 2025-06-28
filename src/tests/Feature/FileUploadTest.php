@@ -15,7 +15,7 @@ class FileUploadTest extends TestCase
     {
         Storage::fake('public');
 
-        $file = UploadedFile::fake()->image('dummy.png');
+        $file = UploadedFile::fake()->image('dummy.png', 100, 100);
         $res = ImageUploader::make()
             ->enableBlur()
             ->enableWatermark()

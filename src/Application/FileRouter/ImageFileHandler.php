@@ -14,11 +14,9 @@ class ImageFileHandler implements FileTypeHandler
 
     public function canHandle($file): bool
     {
-        $mime = $file instanceof UploadedFile
-            ? $file->getMimeType()
+        return $file instanceof UploadedFile
+            ? str_starts_with($file->getMimeType(), 'image/')
             : (is_string($file) && str_starts_with($file, 'data:image/'));
-
-        return $mime && str_starts_with($mime, 'image/');
     }
 
     public function handleSave($file, string $folder): FileOperationResult

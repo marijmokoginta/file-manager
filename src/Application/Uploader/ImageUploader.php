@@ -33,14 +33,14 @@ class ImageUploader
             ->withBlur($this->blur)
             ->withWatermark($this->watermark)
             ->withLowQuality($this->lowQuality)
-            ->process($file, $folder);
+            ->process($file);
 
         $original = $this->driver->save($file, $folder);
 
         $lowQualityPath = null;
         if ($variants->low) {
-            $originalLow = $this->driver->save($variants->low, $folder);
-            $lowQualityPath = $originalLow->filePath;
+            $low = $this->driver->save($variants->low, $folder);
+            $lowQualityPath = $low->filePath;
         }
 
         return new ImageUploadResult(

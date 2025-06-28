@@ -23,23 +23,23 @@ class ImageProcessor
     public function withLowQuality(bool $shouldLowQuality): self { $this->shouldLowQuality = $shouldLowQuality; return $this; }
     public function withWatermark(bool $shouldWatermark): self { $this->shouldWatermark = $shouldWatermark; return $this; }
 
-    public function process($file, string $folder): ProcessedImageVariants
+    public function process($file): ProcessedImageVariants
     {
         $blurPath = $this->shouldBlur
-            ? $this->blurAction->execute($file, $folder)
+            ? $this->blurAction->execute($file)
             : null;
 
-        $lowPath = $this->shouldLowQuality
-            ? $this->lowQualityAction->execute($file, $folder)
+        $lowFile = $this->shouldLowQuality
+            ? $this->lowQualityAction->execute($file)
             : null;
 
         $watermarkPath = $this->shouldWatermark
-            ? $this->watermarkAction->execute($file, $folder)
+            ? $this->watermarkAction->execute($file)
             : null;
 
         return new ProcessedImageVariants(
             $blurPath,
-            $lowPath,
+            $lowFile,
             $watermarkPath
         );
     }

@@ -7,17 +7,17 @@ use Intervention\Image\Colors\Rgb\Channels\Green;
 use Intervention\Image\Colors\Rgb\Channels\Red;
 use Intervention\Image\Colors\Rgb\Color as RgbColor;
 use Intervention\Image\Colors\Rgb\Colorspace as RgbColorSpace;
-use Intervention\Image\Drivers\Imagick\Driver;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Interfaces\ImageInterface;
 use kornrunner\Blurhash\Blurhash;
 
 class GenerateBlurAction implements ImageAction
 {
-    public function execute($file, string $folder): string
+    public function execute($file): string
     {
-        $manager = new ImageManager(new Driver());
-        $image = $manager->read($file);
+        $image = ImageManager::imagick()
+            ->read($file)
+            ->scaleDown(width: 100);
 
         return $this->generateBlurhash($image);
     }
