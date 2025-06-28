@@ -9,12 +9,8 @@ use M2code\FileManager\DTO\FileOperationResult;
 
 class ImageFileHandler implements FileTypeHandler
 {
-    protected $driver;
 
-    public function __construct(FileSaver $driver)
-    {
-        $this->driver = $driver;
-    }
+    public function __construct(protected FileSaver $driver) {}
 
     public function canHandle($file): bool
     {

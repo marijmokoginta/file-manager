@@ -32,7 +32,8 @@
         "illuminate/filesystem": "^10.0|^11.0",
         "illuminate/console": "^10.0|^11.0",
         "kornrunner/blurhash": "^1.1",
-        "ext-http": "*"
+        "ext-http": "*",
+        "intervention/image": "^3"
     },
     "require-dev": {
         "orchestra/testbench": "9.x-dev"
