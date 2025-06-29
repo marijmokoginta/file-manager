@@ -1,0 +1,41 @@
+{
+    "name": "m2code/file-manager",
+    "description": "Flexible Laravel File Manager: upload, move, delete, thumbnail, blurhash, and more",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "M2code\\FileManager\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "M2code\\FileManager\\FileManagerServiceProvider"
+            ],
+            "aliases": {
+                "FileManager": "M2code\\FileManager\\Facades\\FileManager"
+            }
+        }
+    },
+    "authors": [
+        {
+            "name": "marijmokoginta",
+            "email": "marijmokoginta21@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php": "^8.2",
+        "illuminate/support": "^10.0|^11.0",
+        "illuminate/http": "^10.0|^11.0",
+        "illuminate/filesystem": "^10.0|^11.0",
+        "illuminate/console": "^10.0|^11.0",
+        "kornrunner/blurhash": "^1.1",
+        "ext-http": "*",
+        "intervention/image": "^3"
+    },
+    "require-dev": {
+        "orchestra/testbench": "9.x-dev"
+    }
+}
