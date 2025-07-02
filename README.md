@@ -19,7 +19,7 @@
 ## 🚀 Installation
 
 ```bash
-composer require marijmokoginta/file-manager
+composer require m2code/file-manager
 ```
 
 ## 🛠 Publish Configuration
