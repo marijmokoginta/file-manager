@@ -42,9 +42,8 @@ use M2code\FileManager\Uploaders\ImageUploader;
 $uploader = new ImageUploader();
 
 $result = $uploader
-    ->withBlur()
-    ->withLowQuality()
-    ->withWatermark()
+    ->enableBlur()
+    ->enableLowQuality()
     ->upload($request->file('photo'), 'uploads/images');
 
 $result->path;            // Original file path
