@@ -1,4 +1,6 @@
-# File Manager for Laravel
+# 🛠️ File Manager for Laravel (WIP)
+
+> ⚠️ **This package is currently under active development. Breaking changes may occur. Contributions are welcome!**
 
 📦 A modular, clean-architecture-based Laravel package to manage file operations — image, video, documents — with support for multiple drivers (local, cloud, Firebase, etc), progressive images, and flexible configuration.
 
