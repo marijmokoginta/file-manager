@@ -11,9 +11,9 @@ class GenerateLowQualityAction implements ImageAction
     {
         $image = ImageManager::imagick()
             ->read($file)
-            ->scaleDown(width: 300);
+            ->scaleDown(width: 480);
 
-        $encoded = $image->encodeByMediaType(MediaType::IMAGE_JPEG, quality: 10);
+        $encoded = $image->encodeByMediaType(MediaType::IMAGE_JPEG, quality: 30);
 
         return $encoded->toDataUri();
     }
