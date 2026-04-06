@@ -12,10 +12,9 @@ class TestUploadCommand extends Command
 
     public function handle()
     {
-        $dummyContent = 'Hello M2code';
-        $path = 'test/test_' . time() . '.txt';
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect width="20" height="20"/></svg>';
 
-        $result = FileManager::save($dummyContent, 'test');
+        $result = FileManager::save($svg, 'test');
 
         $this->info("Saved at: {$result->filePath}");
     }

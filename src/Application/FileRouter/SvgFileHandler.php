@@ -7,17 +7,13 @@ use M2code\FileManager\Domain\Contracts\FileSaver;
 use M2code\FileManager\Domain\Contracts\FileTypeHandler;
 use M2code\FileManager\DTO\FileOperationResult;
 
-class ImageFileHandler implements FileTypeHandler
+class SvgFileHandler implements FileTypeHandler
 {
-
     public function __construct(protected FileSaver $driver) {}
 
     public function canHandle(FileInput $input): bool
     {
-        $mimeType = strtolower($input->getMimeType());
-
-        return str_starts_with($mimeType, 'image/')
-            && $mimeType !== 'image/svg+xml';
+        return strtolower($input->getMimeType()) === 'image/svg+xml';
     }
 
     public function handleSave(FileInput $input, string $folder): FileOperationResult

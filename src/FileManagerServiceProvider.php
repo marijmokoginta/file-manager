@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use M2code\FileManager\Application\FileManagerService;
 use M2code\FileManager\Application\FileRouter\FileTypeRouterService;
 use M2code\FileManager\Application\FileRouter\ImageFileHandler;
+use M2code\FileManager\Application\FileRouter\SvgFileHandler;
 use M2code\FileManager\Application\Image\Actions\ApplyWatermarkAction;
 use M2code\FileManager\Application\Image\Actions\GenerateBlurAction;
 use M2code\FileManager\Application\Image\Actions\GenerateLowQualityAction;
@@ -31,6 +32,7 @@ class FileManagerServiceProvider extends ServiceProvider
             $driver = FileDriverResolver::resolve();
 
             return new FileTypeRouterService([
+                new SvgFileHandler($driver),
                 new ImageFileHandler($driver),
 
                 // Other handlers
