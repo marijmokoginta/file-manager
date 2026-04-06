@@ -14,7 +14,14 @@ class FileController extends Controller
 {
     public function serve(Request $request, string $disk, string $path): Application|HttpResponse|ResponseFactory
     {
-        $path = base64_decode($path);
+        if ($request->has('signature') || $request->has('expires')) {
+            abort_unless($request->hasValidSignature(), Response::HTTP_FORBIDDEN);
+        }
+
+        $path = base64_decode($path, true);
+        if ($path === false || $path === '') {
+            abort(Response::HTTP_NOT_FOUND);
+        }
 
         $storage = Storage::disk($disk);
 

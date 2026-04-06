@@ -34,7 +34,7 @@ class GenerateBlurAction implements ImageAction
                 $colors = $image->pickColor($x, $y);
 
                 if (!($colors instanceof RgbColor)) {
-                    $colors = $colors->convertTo(new RgbColorspace());
+                    $colors = $colors->convertTo(new RgbColorSpace());
                 }
 
                 $row[] = [
