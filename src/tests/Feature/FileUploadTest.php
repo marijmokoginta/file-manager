@@ -79,6 +79,90 @@ class FileUploadTest extends TestCase
         }
     }
 
+    #[Test]
+    public function test_svg_upload_skips_image_processing_variants(): void
+    {
+        Storage::fake('public');
+
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect width="20" height="20"/></svg>';
+
+        $res = ImageUploader::make()
+            ->blur()
+            ->watermark()
+            ->lowQuality()
+            ->optimize('avif')
+            ->upload($svg, 'testing');
+
+        self::assertNotNull($res->variants->get('original'));
+        self::assertNull($res->variants->get('low_quality'));
+        self::assertNull($res->variants->get('watermark'));
+        self::assertNull($res->variants->get('optimized'));
+        self::assertNull($res->blurhash);
+
+        $originalPath = $res->variants->get('original')?->path;
+        self::assertNotNull($originalPath);
+        self::assertStringEndsWith('.svg', $originalPath);
+        Storage::disk('public')->assertExists($originalPath);
+    }
+
+    #[Test]
+    public function test_base64_png_upload_runs_raster_processing(): void
+    {
+        Storage::fake('public');
+
+        $png = UploadedFile::fake()->image('from-base64.png', 64, 64);
+        $realPath = $png->getRealPath();
+        self::assertNotFalse($realPath);
+
+        $raw = file_get_contents($realPath);
+        self::assertNotFalse($raw);
+
+        $base64Png = 'data:image/png;base64,' . base64_encode($raw);
+
+        $res = ImageUploader::make()
+            ->blur()
+            ->lowQuality()
+            ->upload($base64Png, 'testing');
+
+        $original = $res->variants->get('original')?->path;
+        $lowQuality = $res->variants->get('low_quality')?->path;
+
+        self::assertNotNull($original);
+        self::assertNotNull($lowQuality);
+        self::assertNotNull($res->blurhash);
+        self::assertNotSame('', $res->blurhash);
+
+        Storage::disk('public')->assertExists($original);
+        Storage::disk('public')->assertExists($lowQuality);
+    }
+
+    #[Test]
+    public function test_base64_svg_upload_skips_image_processing_variants(): void
+    {
+        Storage::fake('public');
+
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><rect width="16" height="16"/></svg>';
+        $base64Svg = 'data:image/svg+xml;base64,' . base64_encode($svg);
+
+        $res = ImageUploader::make()
+            ->blur()
+            ->watermark()
+            ->lowQuality()
+            ->optimize('avif')
+            ->upload($base64Svg, 'testing');
+
+        self::assertNotNull($res->variants->get('original'));
+        self::assertNull($res->variants->get('low_quality'));
+        self::assertNull($res->variants->get('watermark'));
+        self::assertNull($res->variants->get('optimized'));
+        self::assertNull($res->blurhash);
+
+        $originalPath = $res->variants->get('original')?->path;
+        self::assertNotNull($originalPath);
+        self::assertStringEndsWith('.svg', $originalPath);
+        Storage::disk('public')->assertExists($originalPath);
+    }
+
     protected function toRelativeUri(string $url): string
     {
         $path = parse_url($url, PHP_URL_PATH) ?? '/';

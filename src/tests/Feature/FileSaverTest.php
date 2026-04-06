@@ -40,6 +40,48 @@ class FileSaverTest extends TestCase
     }
 
     #[Test]
+    public function test_it_can_save_data_uri_svg()
+    {
+        Storage::fake('public');
+
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10"/></svg>';
+        $dataUri = 'data:image/svg+xml;base64,' . base64_encode($svg);
+
+        $result = FileManager::save($dataUri, 'testing');
+
+        self::assertNotNull($result->filePath);
+        self::assertStringEndsWith('.svg', $result->filePath);
+        Storage::disk('public')->assertExists($result->filePath);
+    }
+
+    #[Test]
+    public function test_it_can_save_raw_svg_string()
+    {
+        Storage::fake('public');
+
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12"><circle cx="6" cy="6" r="5"/></svg>';
+        $result = FileManager::save($svg, 'testing');
+
+        self::assertNotNull($result->filePath);
+        self::assertStringEndsWith('.svg', $result->filePath);
+        Storage::disk('public')->assertExists($result->filePath);
+    }
+
+    #[Test]
+    public function test_it_rejects_invalid_base64_data_uri()
+    {
+        Storage::fake('public');
+
+        $this->assertThrows(
+            function () {
+                FileManager::save('data:image/png;base64,%%%%', 'testing');
+            },
+            RuntimeException::class,
+            'Failed to decode base64 data URI.'
+        );
+    }
+
+    #[Test]
     public function test_it_cannot_save_file_with_no_available_handler()
     {
         Storage::fake('public');

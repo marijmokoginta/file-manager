@@ -2,6 +2,7 @@
 
 namespace M2code\FileManager\Application\Uploader;
 
+use M2code\FileManager\Application\FileInput\FileInputFactory;
 use M2code\FileManager\Application\Image\ImageProcessor;
 use M2code\FileManager\Domain\Contracts\FileSaver;
 use M2code\FileManager\Domain\ValueObjects\FileVariant;
@@ -44,6 +45,20 @@ class ImageUploader
 
     public function upload($file, string $folder): ImageUploadResult
     {
+        $input = FileInputFactory::from($file);
+        $isSvg = $input->getMimeType() === 'image/svg+xml';
+
+        $original = $this->driver->save($input, $folder);
+        $variants = new FileVariants();
+        $variants->add(new FileVariant('original', $original->filePath));
+
+        if ($isSvg) {
+            return new ImageUploadResult(
+                variants: $variants,
+                blurhash: null
+            );
+        }
+
         $processedVariants = $this->processor
             ->reset()
             ->withBlur($this->blur)
@@ -51,10 +66,6 @@ class ImageUploader
             ->withLowQuality($this->lowQuality)
             ->withOptimize($this->optimize, $this->optimizeFormat)
             ->process($file);
-
-        $original = $this->driver->save($file, $folder);
-        $variants = new FileVariants();
-        $variants->add(new FileVariant('original', $original->filePath));
 
         foreach ($processedVariants->all() as $processedVariant) {
             $saved = $this->driver->save($processedVariant->path, $folder);

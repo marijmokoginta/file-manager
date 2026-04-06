@@ -3,6 +3,8 @@
 namespace M2code\FileManager\Application\FileRouter;
 
 use Illuminate\Support\Collection;
+use M2code\FileManager\Application\FileInput\FileInput;
+use M2code\FileManager\Application\FileInput\FileInputFactory;
 use M2code\FileManager\Domain\Contracts\FileSaver;
 use M2code\FileManager\DTO\FileOperationResult;
 use RuntimeException;
@@ -18,9 +20,11 @@ class FileTypeRouterService implements FileSaver
 
     public function save($file, string $folder): FileOperationResult
     {
+        $input = $file instanceof FileInput ? $file : FileInputFactory::from($file);
+
         foreach ($this->handlers as $handler) {
-            if ($handler->canHandle($file)) {
-                return $handler->handleSave($file, $folder);
+            if ($handler->canHandle($input)) {
+                return $handler->handleSave($input, $folder);
             }
         }
 
