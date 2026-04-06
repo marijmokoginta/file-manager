@@ -3,6 +3,7 @@
 namespace M2code\FileManager;
 
 use Illuminate\Support\ServiceProvider;
+use M2code\FileManager\Application\FileManagerService;
 use M2code\FileManager\Application\FileRouter\FileTypeRouterService;
 use M2code\FileManager\Application\FileRouter\ImageFileHandler;
 use M2code\FileManager\Application\Image\Actions\ApplyWatermarkAction;
@@ -11,8 +12,10 @@ use M2code\FileManager\Application\Image\Actions\GenerateLowQualityAction;
 use M2code\FileManager\Application\Image\ImageProcessor;
 use M2code\FileManager\Application\Uploader\ImageUploader;
 use M2code\FileManager\Console\TestUploadCommand;
+use M2code\FileManager\Core\FileDeleterResolver;
 use M2code\FileManager\Core\FileDriverResolver;
 use M2code\FileManager\Core\FileUrlGeneratorResolver;
+use M2code\FileManager\Domain\Contracts\FileDeleter;
 use M2code\FileManager\Domain\Contracts\FileSaver;
 use M2code\FileManager\Domain\Contracts\FileUrlGenerator;
 
@@ -31,6 +34,10 @@ class FileManagerServiceProvider extends ServiceProvider
 
                 // Other handlers
             ]);
+        });
+
+        $this->app->bind(FileDeleter::class, function () {
+            return FileDeleterResolver::resolve();
         });
 
         $this->app->bind(GenerateBlurAction::class, fn () => new GenerateBlurAction());
@@ -54,8 +61,15 @@ class FileManagerServiceProvider extends ServiceProvider
             );
         });
 
+        $this->app->bind(FileManagerService::class, function ($app) {
+            return new FileManagerService(
+                $app->make(FileSaver::class),
+                $app->make(FileDeleter::class)
+            );
+        });
+
         $this->app->singleton('file-manager', function () {
-            return app(FileSaver::class);
+            return app(FileManagerService::class);
         });
 
         $this->app->singleton(FileUrlGenerator::class, function () {

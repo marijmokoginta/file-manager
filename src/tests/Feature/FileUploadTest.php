@@ -5,6 +5,7 @@ namespace M2code\FileManager\tests\Feature;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use M2code\FileManager\Application\Uploader\ImageUploader;
+use M2code\FileManager\Facades\FileManager;
 use M2code\FileManager\Facades\FileUrl;
 use M2code\FileManager\tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
@@ -24,18 +25,31 @@ class FileUploadTest extends TestCase
             ->upload($file, 'testing');
 
         self::assertNotNull($res);
-        self::assertNotNull($res->path);
-        self::assertNotNull($res->lowQualityPath);
-        self::assertNotNull($res->watermarkPath);
         self::assertNotNull($res->blurhash);
         self::assertNotSame('', $res->blurhash);
+        self::assertNotNull($res->variants->get('original'));
+        self::assertNotNull($res->variants->get('low_quality'));
+        self::assertNotNull($res->variants->get('watermark'));
 
-        $url = FileUrl::getUrl($res->path);
-        $signedUrl = FileUrl::getSignedUrl($res->path, now()->addMinutes(5));
+        $originalPath = $res->variants->get('original')?->path;
+        $lowQualityPath = $res->variants->get('low_quality')?->path;
+        $watermarkPath = $res->variants->get('watermark')?->path;
 
-        Storage::disk('public')->assertExists($res->path);
-        Storage::disk('public')->assertExists($res->lowQualityPath);
-        Storage::disk('public')->assertExists($res->watermarkPath);
+        self::assertNotNull($originalPath);
+        self::assertNotNull($lowQualityPath);
+        self::assertNotNull($watermarkPath);
+
+        // Backward compatibility for legacy fields.
+        self::assertSame($originalPath, $res->path);
+        self::assertSame($lowQualityPath, $res->lowQualityPath);
+        self::assertSame($watermarkPath, $res->watermarkPath);
+
+        $url = FileUrl::getUrl($originalPath);
+        $signedUrl = FileUrl::getSignedUrl($originalPath, now()->addMinutes(5));
+
+        Storage::disk('public')->assertExists($originalPath);
+        Storage::disk('public')->assertExists($lowQualityPath);
+        Storage::disk('public')->assertExists($watermarkPath);
 
         self::assertNotNull($url);
         self::assertNotNull($signedUrl);
@@ -47,9 +61,20 @@ class FileUploadTest extends TestCase
         $signedResponse = $this->get($this->toRelativeUri($signedUrl));
         $signedResponse->assertOk();
 
-        $expiredSignedUrl = FileUrl::getSignedUrl($res->path, now()->subMinute());
+        $expiredSignedUrl = FileUrl::getSignedUrl($originalPath, now()->subMinute());
         $expiredResponse = $this->get($this->toRelativeUri($expiredSignedUrl));
         $expiredResponse->assertForbidden();
+
+        $deleteResults = FileManager::deleteVariants($res->variants);
+        self::assertSame([
+            $originalPath => true,
+            $lowQualityPath => true,
+            $watermarkPath => true,
+        ], $deleteResults);
+
+        Storage::disk('public')->assertMissing($originalPath);
+        Storage::disk('public')->assertMissing($lowQualityPath);
+        Storage::disk('public')->assertMissing($watermarkPath);
     }
 
     protected function toRelativeUri(string $url): string

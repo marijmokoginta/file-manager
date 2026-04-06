@@ -2,12 +2,27 @@
 
 namespace M2code\FileManager\DTO;
 
+use M2code\FileManager\Domain\ValueObjects\FileVariants;
+
 readonly class ImageUploadResult
 {
     public function __construct(
-        public string  $path,
-        public ?string $lowQualityPath = null,
-        public ?string $watermarkPath = null,
+        public FileVariants $variants,
         public ?string $blurhash = null
     ) {}
+
+    public function __get(string $name): ?string
+    {
+        return match ($name) {
+            'path' => $this->variantPath('original'),
+            'lowQualityPath' => $this->variantPath('low_quality'),
+            'watermarkPath' => $this->variantPath('watermark'),
+            default => null,
+        };
+    }
+
+    protected function variantPath(string $type): ?string
+    {
+        return $this->variants->get($type)?->path;
+    }
 }

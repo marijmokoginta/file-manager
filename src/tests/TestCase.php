@@ -2,6 +2,7 @@
 
 namespace M2code\FileManager\tests;
 
+use M2code\FileManager\Drivers\Local\LocalFileDeleter;
 use M2code\FileManager\Drivers\Local\LocalFileSaver;
 use M2code\FileManager\FileManagerServiceProvider;
 use M2code\FileManager\Infrastructure\UrlGenerator\LocalFileUrlGenerator;
@@ -21,6 +22,13 @@ abstract class TestCase extends BaseTestCase
             'drivers' => [
                 'local' => [
                     'class' => LocalFileSaver::class,
+                    'disk' => 'public'
+                ]
+            ],
+            'default_deleter' => 'local',
+            'deleters' => [
+                'local' => [
+                    'class' => LocalFileDeleter::class,
                     'disk' => 'public'
                 ]
             ],

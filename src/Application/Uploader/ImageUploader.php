@@ -4,6 +4,8 @@ namespace M2code\FileManager\Application\Uploader;
 
 use M2code\FileManager\Application\Image\ImageProcessor;
 use M2code\FileManager\Domain\Contracts\FileSaver;
+use M2code\FileManager\Domain\ValueObjects\FileVariant;
+use M2code\FileManager\Domain\ValueObjects\FileVariants;
 use M2code\FileManager\DTO\ImageUploadResult;
 
 class ImageUploader
@@ -32,7 +34,7 @@ class ImageUploader
 
     public function upload($file, string $folder): ImageUploadResult
     {
-        $variants = $this->processor
+        $processedVariants = $this->processor
             ->reset()
             ->withBlur($this->blur)
             ->withWatermark($this->watermark)
@@ -40,24 +42,17 @@ class ImageUploader
             ->process($file);
 
         $original = $this->driver->save($file, $folder);
+        $variants = new FileVariants();
+        $variants->add(new FileVariant('original', $original->filePath));
 
-        $lowQualityPath = null;
-        if ($variants->low) {
-            $low = $this->driver->save($variants->low, $folder);
-            $lowQualityPath = $low->filePath;
-        }
-
-        $watermarkPath = null;
-        if ($variants->watermark) {
-            $watermark = $this->driver->save($variants->watermark, $folder);
-            $watermarkPath = $watermark->filePath;
+        foreach ($processedVariants->all() as $processedVariant) {
+            $saved = $this->driver->save($processedVariant->path, $folder);
+            $variants->add(new FileVariant($processedVariant->type, $saved->filePath));
         }
 
         return new ImageUploadResult(
-            path: $original->filePath,
-            lowQualityPath: $lowQualityPath,
-            watermarkPath: $watermarkPath,
-            blurhash: $variants->blurhash ?? null
+            variants: $variants,
+            blurhash: $this->processor->getBlurhash()
         );
     }
 }

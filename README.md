@@ -8,9 +8,10 @@
 
 ## 🔧 Features
 
-- 📁 Save, move, delete, and manage files (images, videos, docs, etc.)
+- 📁 Save and delete files (single or batch)
 - 🧠 Auto-detect file type & handle accordingly
-- 🌁 Image processing (blur preview, low quality, watermark)
+- 🌁 Image processing (blurhash, low quality, watermark)
+- 🧩 Structured variants (`original`, `low_quality`, `watermark`, future-ready)
 - ☁️ Extensible storage drivers: local, S3, Firebase, etc.
 - ⚙️ Clean architecture (DDD-friendly & testable)
 - 🧩 Facade and fluent Uploader API
@@ -34,23 +35,44 @@ php artisan vendor:publish --tag=config --provider="M2code\FileManager\FileManag
 ```php
 use M2code\FileManager\Facades\FileManager;
 
-$path = FileManager::save($request->file('image'), 'uploads');
+$result = FileManager::save($request->file('image'), 'uploads');
+$result->filePath;
 ```
 
 ### Upload image with processing:
 ```php
-use M2code\FileManager\Uploaders\ImageUploader;
+use M2code\FileManager\Application\Uploader\ImageUploader;
 
-$uploader = new ImageUploader();
-
-$result = $uploader
-    ->enableBlur()
-    ->enableLowQuality()
+$result = ImageUploader::make()
+    ->blur()
+    ->lowQuality()
+    ->watermark()
     ->upload($request->file('photo'), 'uploads/images');
 
-$result->path;            // Original file path
-$result->lowQualityPath;  // Low quality version
-$result->blurhash;        // Blurhash string
+$result->variants->get('original')?->path;
+$result->variants->get('low_quality')?->path;
+$result->variants->get('watermark')?->path;
+$result->blurhash;
+
+// Backward-compatible fields (still available):
+$result->path;
+$result->lowQualityPath;
+$result->watermarkPath;
+```
+
+### Delete files:
+```php
+use M2code\FileManager\Facades\FileManager;
+
+FileManager::delete('uploads/images/file.jpg');
+
+FileManager::deleteMany([
+    'uploads/images/a.jpg',
+    'uploads/images/b.jpg',
+]);
+
+// Delete all variants from upload result:
+FileManager::deleteVariants($result->variants);
 ```
 
 ## 📡 Get file URL
@@ -58,6 +80,7 @@ $result->blurhash;        // Blurhash string
 use M2code\FileManager\Facades\FileUrl;
 
 $url = FileUrl::getUrl('uploads/images/image.jpg'); // Local or driver-specific
+$signed = FileUrl::getSignedUrl('uploads/images/image.jpg', now()->addMinutes(5));
 ```
 
 ## 🗃 Supported Drivers
@@ -66,12 +89,14 @@ $url = FileUrl::getUrl('uploads/images/image.jpg'); // Local or driver-specific
 
 Configure in `config/file-manager.php`:
 ```php
-'driver' => 'local', // or 'firebase', 's3'
+'default_driver' => 'local',
+'default_deleter' => 'local',
+'default_url_generator' => 'local',
 ```
 
 ## 🧩 Optional Requirement: Imagick (Recommended)
 
-This package uses :contentReference[oaicite:0]{index=0} for image processing features such as:
+This package uses `intervention/image` with Imagick driver for image processing features such as:
 
 - Blurhash generation
 - Low quality image variants
@@ -162,6 +187,13 @@ If installed correctly, you should see:
 ```bash
 imagick
 ```
+
+## ✅ Current Stable Flow
+
+- Upload image (with optional variants)
+- Read variant paths from `ImageUploadResult::variants`
+- Generate URL / signed URL
+- Delete single file / batch / all variants safely
 
 ## 📄 License
 [MIT License](LICENSE) © Marij Mokoginta (M2code)
