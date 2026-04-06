@@ -22,6 +22,7 @@ class FileUploadTest extends TestCase
             ->blur()
             ->watermark()
             ->lowQuality()
+            ->optimize('avif')
             ->upload($file, 'testing');
 
         self::assertNotNull($res);
@@ -34,6 +35,7 @@ class FileUploadTest extends TestCase
         $originalPath = $res->variants->get('original')?->path;
         $lowQualityPath = $res->variants->get('low_quality')?->path;
         $watermarkPath = $res->variants->get('watermark')?->path;
+        $optimizedPath = $res->variants->get('optimized')?->path;
 
         self::assertNotNull($originalPath);
         self::assertNotNull($lowQualityPath);
@@ -43,6 +45,7 @@ class FileUploadTest extends TestCase
         self::assertSame($originalPath, $res->path);
         self::assertSame($lowQualityPath, $res->lowQualityPath);
         self::assertSame($watermarkPath, $res->watermarkPath);
+        self::assertSame($optimizedPath, $res->optimizedPath);
 
         $url = FileUrl::getUrl($originalPath);
         $signedUrl = FileUrl::getSignedUrl($originalPath, now()->addMinutes(5));
@@ -50,6 +53,9 @@ class FileUploadTest extends TestCase
         Storage::disk('public')->assertExists($originalPath);
         Storage::disk('public')->assertExists($lowQualityPath);
         Storage::disk('public')->assertExists($watermarkPath);
+        if ($optimizedPath !== null) {
+            Storage::disk('public')->assertExists($optimizedPath);
+        }
 
         self::assertNotNull($url);
         self::assertNotNull($signedUrl);
@@ -66,15 +72,11 @@ class FileUploadTest extends TestCase
         $expiredResponse->assertForbidden();
 
         $deleteResults = FileManager::deleteVariants($res->variants);
-        self::assertSame([
-            $originalPath => true,
-            $lowQualityPath => true,
-            $watermarkPath => true,
-        ], $deleteResults);
+        self::assertSame(array_fill_keys($res->variants->paths(), true), $deleteResults);
 
-        Storage::disk('public')->assertMissing($originalPath);
-        Storage::disk('public')->assertMissing($lowQualityPath);
-        Storage::disk('public')->assertMissing($watermarkPath);
+        foreach ($res->variants->paths() as $variantPath) {
+            Storage::disk('public')->assertMissing($variantPath);
+        }
     }
 
     protected function toRelativeUri(string $url): string

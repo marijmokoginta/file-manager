@@ -10,8 +10,8 @@
 
 - 📁 Save and delete files (single or batch)
 - 🧠 Auto-detect file type & handle accordingly
-- 🌁 Image processing (blurhash, low quality, watermark)
-- 🧩 Structured variants (`original`, `low_quality`, `watermark`, future-ready)
+- 🌁 Image processing (blurhash, low quality, watermark, optimized AVIF/WebP)
+- 🧩 Structured variants (`original`, `optimized`, `low_quality`, `watermark`)
 - ☁️ Extensible storage drivers: local, S3, Firebase, etc.
 - ⚙️ Clean architecture (DDD-friendly & testable)
 - 🧩 Facade and fluent Uploader API
@@ -47,15 +47,18 @@ $result = ImageUploader::make()
     ->blur()
     ->lowQuality()
     ->watermark()
+    ->optimize('avif') // fallback to webp, or skipped if unsupported
     ->upload($request->file('photo'), 'uploads/images');
 
 $result->variants->get('original')?->path;
+$result->variants->get('optimized')?->path;
 $result->variants->get('low_quality')?->path;
 $result->variants->get('watermark')?->path;
 $result->blurhash;
 
 // Backward-compatible fields (still available):
 $result->path;
+$result->optimizedPath;
 $result->lowQualityPath;
 $result->watermarkPath;
 ```
@@ -94,15 +97,16 @@ Configure in `config/file-manager.php`:
 'default_url_generator' => 'local',
 ```
 
-## 🧩 Optional Requirement: Imagick (Recommended)
+## 🧩 Requirement: Imagick
 
 This package uses `intervention/image` with Imagick driver for image processing features such as:
 
 - Blurhash generation
+- Optimized AVIF/WebP variant generation
 - Low quality image variants
 - Watermark (when enabled)
 
-While it can work without Imagick, **it is strongly recommended** to install the Imagick extension for better performance and compatibility.
+Imagick is required and declared in `composer.json` (`ext-imagick`).
 
 ---
 

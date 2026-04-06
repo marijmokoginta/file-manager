@@ -13,6 +13,8 @@ class ImageUploader
     protected bool $blur = false;
     protected bool $watermark = false;
     protected bool $lowQuality = false;
+    protected bool $optimize = false;
+    protected string $optimizeFormat = 'avif';
 
     public function __construct(
         protected FileSaver $driver,
@@ -27,10 +29,18 @@ class ImageUploader
     public function blur(): self { $this->blur = true; return $this; }
     public function watermark(): self { $this->watermark = true; return $this; }
     public function lowQuality(): self { $this->lowQuality = true; return $this; }
+    public function optimize(string $format = 'avif'): self
+    {
+        $this->optimize = true;
+        $this->optimizeFormat = strtolower($format);
+
+        return $this;
+    }
 
     public function enableBlur(): self { return $this->blur(); }
     public function enableWatermark(): self { return $this->watermark(); }
     public function enableLowQuality(): self { return $this->lowQuality(); }
+    public function enableOptimize(string $format = 'avif'): self { return $this->optimize($format); }
 
     public function upload($file, string $folder): ImageUploadResult
     {
@@ -39,6 +49,7 @@ class ImageUploader
             ->withBlur($this->blur)
             ->withWatermark($this->watermark)
             ->withLowQuality($this->lowQuality)
+            ->withOptimize($this->optimize, $this->optimizeFormat)
             ->process($file);
 
         $original = $this->driver->save($file, $folder);

@@ -9,6 +9,7 @@ use M2code\FileManager\Application\FileRouter\ImageFileHandler;
 use M2code\FileManager\Application\Image\Actions\ApplyWatermarkAction;
 use M2code\FileManager\Application\Image\Actions\GenerateBlurAction;
 use M2code\FileManager\Application\Image\Actions\GenerateLowQualityAction;
+use M2code\FileManager\Application\Image\Actions\GenerateOptimizedImageAction;
 use M2code\FileManager\Application\Image\ImageProcessor;
 use M2code\FileManager\Application\Uploader\ImageUploader;
 use M2code\FileManager\Console\TestUploadCommand;
@@ -43,12 +44,14 @@ class FileManagerServiceProvider extends ServiceProvider
         $this->app->bind(GenerateBlurAction::class, fn () => new GenerateBlurAction());
         $this->app->bind(GenerateLowQualityAction::class, fn () => new GenerateLowQualityAction());
         $this->app->bind(ApplyWatermarkAction::class, fn () => new ApplyWatermarkAction());
+        $this->app->bind(GenerateOptimizedImageAction::class, fn () => new GenerateOptimizedImageAction());
 
         $this->app->bind(ImageProcessor::class, function ($app) {
             return new ImageProcessor(
                 $app->make(GenerateBlurAction::class),
                 $app->make(GenerateLowQualityAction::class),
-                $app->make(ApplyWatermarkAction::class)
+                $app->make(ApplyWatermarkAction::class),
+                $app->make(GenerateOptimizedImageAction::class)
             );
         });
 

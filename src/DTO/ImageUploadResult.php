@@ -17,6 +17,7 @@ readonly class ImageUploadResult
             'path' => $this->variantPath('original'),
             'lowQualityPath' => $this->variantPath('low_quality'),
             'watermarkPath' => $this->variantPath('watermark'),
+            'optimizedPath' => $this->variantPath('optimized'),
             default => null,
         };
     }
