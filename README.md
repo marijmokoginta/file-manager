@@ -10,6 +10,7 @@
 
 - 📁 Save and delete files (single or batch)
 - 🧠 Auto-detect file type & handle accordingly
+- 🧾 Input-agnostic file handling (`UploadedFile`, base64 data URI, raw SVG string)
 - 🌁 Image processing (blurhash, low quality, watermark, optimized AVIF/WebP)
 - 🧩 Structured variants (`original`, `optimized`, `low_quality`, `watermark`)
 - ☁️ Extensible storage drivers: local, S3, Firebase, etc.
@@ -39,6 +40,23 @@ $result = FileManager::save($request->file('image'), 'uploads');
 $result->filePath;
 ```
 
+### Save from base64 or raw SVG string:
+```php
+use M2code\FileManager\Facades\FileManager;
+
+// Base64 PNG
+$base64Png = 'data:image/png;base64,...';
+$png = FileManager::save($base64Png, 'uploads');
+
+// Base64 SVG
+$base64Svg = 'data:image/svg+xml;base64,...';
+$svgFromBase64 = FileManager::save($base64Svg, 'uploads');
+
+// Raw SVG string
+$svg = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64">...</svg>';
+$svgRaw = FileManager::save($svg, 'uploads');
+```
+
 ### Upload image with processing:
 ```php
 use M2code\FileManager\Application\Uploader\ImageUploader;
@@ -61,6 +79,24 @@ $result->path;
 $result->optimizedPath;
 $result->lowQualityPath;
 $result->watermarkPath;
+```
+
+### SVG behavior in ImageUploader
+```php
+$svg = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64">...</svg>';
+
+$result = ImageUploader::make()
+    ->blur()
+    ->lowQuality()
+    ->watermark()
+    ->optimize('avif')
+    ->upload($svg, 'uploads/images');
+
+// SVG only keeps original variant, raster processing is skipped:
+$result->variants->get('original')?->path;   // not null
+$result->variants->get('low_quality');       // null
+$result->variants->get('optimized');         // null
+$result->blurhash;                           // null
 ```
 
 ### Delete files:
@@ -195,6 +231,7 @@ imagick
 ## ✅ Current Stable Flow
 
 - Upload image (with optional variants)
+- Upload from `UploadedFile`, base64 data URI, or raw SVG string
 - Read variant paths from `ImageUploadResult::variants`
 - Generate URL / signed URL
 - Delete single file / batch / all variants safely
