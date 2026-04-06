@@ -25,6 +25,21 @@ class FileSaverTest extends TestCase
         Storage::disk('public')->assertExists($result->filePath);
     }
 
+    #[Test]
+    public function test_it_can_save_data_uri_image()
+    {
+        Storage::fake('public');
+
+        $dataUri = 'data:image/png;base64,' .
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAukB9sJfDgAAAABJRU5ErkJggg==';
+
+        $result = FileManager::save($dataUri, 'testing');
+
+        self::assertNotNull($result->filePath);
+        Storage::disk('public')->assertExists($result->filePath);
+    }
+
+    #[Test]
     public function test_it_cannot_save_file_with_no_available_handler()
     {
         Storage::fake('public');

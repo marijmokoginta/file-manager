@@ -22,9 +22,13 @@ class ImageUploader
         return app(self::class);
     }
 
-    public function enableBlur(): self { $this->blur = true; return $this; }
-    public function enableWatermark(): self { $this->watermark = true; return $this; }
-    public function enableLowQuality(): self { $this->lowQuality = true; return $this; }
+    public function blur(): self { $this->blur = true; return $this; }
+    public function watermark(): self { $this->watermark = true; return $this; }
+    public function lowQuality(): self { $this->lowQuality = true; return $this; }
+
+    public function enableBlur(): self { return $this->blur(); }
+    public function enableWatermark(): self { return $this->watermark(); }
+    public function enableLowQuality(): self { return $this->lowQuality(); }
 
     public function upload($file, string $folder): ImageUploadResult
     {
@@ -43,9 +47,16 @@ class ImageUploader
             $lowQualityPath = $low->filePath;
         }
 
+        $watermarkPath = null;
+        if ($variants->watermark) {
+            $watermark = $this->driver->save($variants->watermark, $folder);
+            $watermarkPath = $watermark->filePath;
+        }
+
         return new ImageUploadResult(
             path: $original->filePath,
             lowQualityPath: $lowQualityPath,
+            watermarkPath: $watermarkPath,
             blurhash: $variants->blurhash ?? null
         );
     }

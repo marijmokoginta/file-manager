@@ -22,7 +22,7 @@ class LocalFileUrlGenerator implements FileUrlGenerator
     {
         return route(self::ROUTE_NAME, [
             'disk' => $this->disk,
-            'path' => $this->getDecodedPath($path)
+            'path' => $this->encodePath($path)
         ]);
     }
 
@@ -30,11 +30,11 @@ class LocalFileUrlGenerator implements FileUrlGenerator
     {
         return URL::temporarySignedRoute(self::ROUTE_NAME, $expiresAt, [
             'disk' => $this->disk,
-            'path' => $this->getDecodedPath($path)
+            'path' => $this->encodePath($path)
         ]);
     }
 
-    protected function getDecodedPath(string $path): string
+    protected function encodePath(string $path): string
     {
         return base64_encode(ltrim($path, '/'));
     }

@@ -2,10 +2,10 @@
 
 namespace M2code\FileManager\Core;
 
-use http\Exception\RuntimeException;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Support\Facades\Config;
 use M2code\FileManager\Domain\Contracts\FileSaver;
+use RuntimeException;
 
 class FileDriverResolver
 {
