@@ -41,6 +41,7 @@ class FileExtensionHelper
             'image/webp' => 'webp',
             'image/gif' => 'gif',
             'image/avif' => 'avif',
+            'application/pdf' => 'pdf',
             default => 'bin',
         };
     }

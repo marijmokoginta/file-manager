@@ -82,6 +82,34 @@ class FileSaverTest extends TestCase
     }
 
     #[Test]
+    public function test_it_can_save_pdf_file()
+    {
+        Storage::fake('public');
+
+        $file = UploadedFile::fake()->create('document.pdf', 100, 'application/pdf');
+        $result = FileManager::save($file, 'testing');
+
+        self::assertNotNull($result->filePath);
+        self::assertStringEndsWith('.pdf', $result->filePath);
+        Storage::disk('public')->assertExists($result->filePath);
+    }
+
+    #[Test]
+    public function test_it_can_save_data_uri_pdf()
+    {
+        Storage::fake('public');
+
+        $pdfContent = '%PDF-1.4 test content';
+        $dataUri = 'data:application/pdf;base64,' . base64_encode($pdfContent);
+
+        $result = FileManager::save($dataUri, 'testing');
+
+        self::assertNotNull($result->filePath);
+        self::assertStringEndsWith('.pdf', $result->filePath);
+        Storage::disk('public')->assertExists($result->filePath);
+    }
+
+    #[Test]
     public function test_it_cannot_save_file_with_no_available_handler()
     {
         Storage::fake('public');

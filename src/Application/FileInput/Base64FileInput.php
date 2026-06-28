@@ -49,6 +49,7 @@ class Base64FileInput implements FileInput
             'image/gif' => 'gif',
             'image/avif' => 'avif',
             'image/svg+xml' => 'svg',
+            'application/pdf' => 'pdf',
             default => 'bin',
         };
     }
