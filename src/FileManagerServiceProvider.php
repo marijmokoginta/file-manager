@@ -15,13 +15,17 @@ use M2code\FileManager\Application\Image\Actions\GenerateOptimizedImageAction;
 use M2code\FileManager\Application\Image\ImageProcessor;
 use M2code\FileManager\Application\Uploader\ImageUploader;
 use M2code\FileManager\Application\UploadService;
+use M2code\FileManager\Console\CleanTmpUploadsCommand;
 use M2code\FileManager\Console\TestUploadCommand;
 use M2code\FileManager\Core\FileDeleterResolver;
 use M2code\FileManager\Core\FileDriverResolver;
 use M2code\FileManager\Core\FileUrlGeneratorResolver;
 use M2code\FileManager\Domain\Contracts\FileDeleter;
+use M2code\FileManager\Domain\Contracts\FileMover;
 use M2code\FileManager\Domain\Contracts\FileSaver;
 use M2code\FileManager\Domain\Contracts\FileUrlGenerator;
+use M2code\FileManager\Drivers\Local\LocalFileMover;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Routing\Router;
 
 class FileManagerServiceProvider extends ServiceProvider
@@ -90,6 +94,16 @@ class FileManagerServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(UploadService::class, fn () => new UploadService());
+
+        $this->app->bind(FileMover::class, function () {
+            $deleterConfig = config('file-manager.deleters.local', []);
+
+            return new LocalFileMover($deleterConfig);
+        });
+
+        $this->app->singleton('file-mover', function () {
+            return app(FileMover::class);
+        });
     }
 
     public function boot(): void
@@ -104,8 +118,11 @@ class FileManagerServiceProvider extends ServiceProvider
 
         if ($this->app->runningInConsole()) {
             $this->commands([
-                TestUploadCommand::class
+                TestUploadCommand::class,
+                CleanTmpUploadsCommand::class,
             ]);
+
+            $this->registerScheduler();
         }
     }
 
@@ -114,6 +131,13 @@ class FileManagerServiceProvider extends ServiceProvider
         $router = $this->app->make(Router::class);
 
         $router->aliasMiddleware('file-manager.api', \M2code\FileManager\Http\Middleware\FileManagerApiAuth::class);
+    }
+
+    protected function registerScheduler(): void
+    {
+        $this->callAfterResolving(Schedule::class, function (Schedule $schedule) {
+            $schedule->command('file-manager:clean-tmp')->daily();
+        });
     }
 
 }

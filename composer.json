@@ -14,7 +14,8 @@
                 "M2code\\FileManager\\FileManagerServiceProvider"
             ],
             "aliases": {
-                "FileManager": "M2code\\FileManager\\Facades\\FileManager"
+                "FileManager": "M2code\\FileManager\\Facades\\FileManager",
+                "FileMover": "M2code\\FileManager\\Facades\\FileMover"
             }
         }
     },
