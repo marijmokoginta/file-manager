@@ -27,4 +27,9 @@ class SvgStringFileInput implements FileInput
     {
         return 'svg';
     }
+
+    public function getClientOriginalName(): ?string
+    {
+        return null;
+    }
 }

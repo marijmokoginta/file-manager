@@ -53,4 +53,9 @@ class Base64FileInput implements FileInput
             default => 'bin',
         };
     }
+
+    public function getClientOriginalName(): ?string
+    {
+        return null;
+    }
 }

@@ -14,6 +14,7 @@ use M2code\FileManager\Application\Image\Actions\GenerateLowQualityAction;
 use M2code\FileManager\Application\Image\Actions\GenerateOptimizedImageAction;
 use M2code\FileManager\Application\Image\ImageProcessor;
 use M2code\FileManager\Application\Uploader\ImageUploader;
+use M2code\FileManager\Application\UploadService;
 use M2code\FileManager\Console\TestUploadCommand;
 use M2code\FileManager\Core\FileDeleterResolver;
 use M2code\FileManager\Core\FileDriverResolver;
@@ -21,6 +22,7 @@ use M2code\FileManager\Core\FileUrlGeneratorResolver;
 use M2code\FileManager\Domain\Contracts\FileDeleter;
 use M2code\FileManager\Domain\Contracts\FileSaver;
 use M2code\FileManager\Domain\Contracts\FileUrlGenerator;
+use Illuminate\Routing\Router;
 
 class FileManagerServiceProvider extends ServiceProvider
 {
@@ -86,6 +88,8 @@ class FileManagerServiceProvider extends ServiceProvider
         $this->app->singleton('file-url', function () {
             return app(FileUrlGenerator::class);
         });
+
+        $this->app->singleton(UploadService::class, fn () => new UploadService());
     }
 
     public function boot(): void
@@ -94,6 +98,8 @@ class FileManagerServiceProvider extends ServiceProvider
             __DIR__.'/config/file-manager.php' => config_path('file-manager.php')
         ], 'config');
 
+        $this->registerMiddleware();
+
         $this->loadRoutesFrom(__DIR__.'/Http/routes.php');
 
         if ($this->app->runningInConsole()) {
@@ -101,6 +107,13 @@ class FileManagerServiceProvider extends ServiceProvider
                 TestUploadCommand::class
             ]);
         }
+    }
+
+    protected function registerMiddleware(): void
+    {
+        $router = $this->app->make(Router::class);
+
+        $router->aliasMiddleware('file-manager.api', \M2code\FileManager\Http\Middleware\FileManagerApiAuth::class);
     }
 
 }
