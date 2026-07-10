@@ -43,6 +43,7 @@
         "ext-imagick": "*"
     },
     "require-dev": {
+        "laravel/pint": "^1.0",
         "orchestra/testbench": "^9.0|^10.0|^11.0"
     }
 }
