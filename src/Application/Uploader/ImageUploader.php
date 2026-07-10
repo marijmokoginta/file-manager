@@ -22,6 +22,8 @@ class ImageUploader
 
     protected string $optimizeFormat = 'avif';
 
+    protected ?bool $encrypted = null;
+
     public function __construct(
         protected FileSaver $driver,
         protected ImageProcessor $processor
@@ -61,6 +63,13 @@ class ImageUploader
         return $this;
     }
 
+    public function encrypted(bool $enabled = true): self
+    {
+        $this->encrypted = $enabled;
+
+        return $this;
+    }
+
     public function enableBlur(): self
     {
         return $this->blur();
@@ -93,6 +102,7 @@ class ImageUploader
                 'watermark' => $this->watermark = $value,
                 'low_quality' => $this->lowQuality = $value,
                 'optimize' => $this->optimize = $value,
+                'encrypted' => $this->encrypted = $value,
                 default => null,
             };
         }
@@ -107,7 +117,7 @@ class ImageUploader
         $input = FileInputFactory::from($file);
         $isSvg = $input->getMimeType() === 'image/svg+xml';
 
-        $original = $saver->save($input, $folder);
+        $original = $saver->save($input, $folder, encrypted: $this->encrypted);
         $variants = new FileVariants;
         $variants->add(new FileVariant('original', $original->filePath));
 
@@ -127,7 +137,7 @@ class ImageUploader
             ->process($this->resolveProcessableSource($input, $file));
 
         foreach ($processedVariants->all() as $processedVariant) {
-            $saved = $saver->save($processedVariant->path, $folder);
+            $saved = $saver->save($processedVariant->path, $folder, encrypted: $this->encrypted);
             $variants->add(new FileVariant($processedVariant->type, $saved->filePath));
         }
 

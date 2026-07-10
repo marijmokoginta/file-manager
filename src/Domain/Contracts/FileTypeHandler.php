@@ -10,7 +10,16 @@ interface FileTypeHandler
 {
     public function canHandle(FileInput $input): bool;
 
-    public function handleSave(FileInput $input, string $folder): FileOperationResult;
+    /**
+     * Save a file to permanent storage.
+     *
+     * @param  FileInput  $input  Normalized file input
+     * @param  string  $folder  Destination folder
+     * @param  string|null  $fileName  Optional filename (auto-generated if null)
+     * @param  bool|null  $encrypted  Override encryption setting (null = use config)
+     * @return FileOperationResult
+     */
+    public function handleSave(FileInput $input, string $folder, ?string $fileName = null, ?bool $encrypted = null): FileOperationResult;
 
     /**
      * Handle file upload for the API, with flexible options.

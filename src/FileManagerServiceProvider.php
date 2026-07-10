@@ -22,12 +22,16 @@ use M2code\FileManager\Console\TestUploadCommand;
 use M2code\FileManager\Core\FileDeleterResolver;
 use M2code\FileManager\Core\FileDriverResolver;
 use M2code\FileManager\Core\FileUrlGeneratorResolver;
+use M2code\FileManager\Domain\Contracts\ContentEncryptor;
 use M2code\FileManager\Domain\Contracts\FileDeleter;
 use M2code\FileManager\Domain\Contracts\FileMover;
 use M2code\FileManager\Domain\Contracts\FileSaver;
 use M2code\FileManager\Domain\Contracts\FileUrlGenerator;
 use M2code\FileManager\Drivers\Local\LocalFileMover;
 use M2code\FileManager\Http\Middleware\FileManagerApiAuth;
+use M2code\FileManager\Infrastructure\Encryption\LaravelCryptEncryptor;
+use M2code\FileManager\Infrastructure\Encryption\NoopEncryptor;
+use M2code\FileManager\Infrastructure\Encryption\OpenSslEncryptor;
 
 class FileManagerServiceProvider extends ServiceProvider
 {
@@ -35,15 +39,30 @@ class FileManagerServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/config/file-manager.php', 'file-manager');
 
-        $this->app->bind(FileSaver::class, function () {
+        // Bind ContentEncryptor — resolved based on config
+        $this->app->singleton(ContentEncryptor::class, function () {
+            if (! config('file-manager.encryption.enabled', false)) {
+                return new NoopEncryptor;
+            }
+
+            $driver = config('file-manager.encryption.driver', 'laravel');
+
+            return match ($driver) {
+                'openssl' => new OpenSslEncryptor(
+                    config('file-manager.encryption.key') ?? config('app.key', '')
+                ),
+                default => new LaravelCryptEncryptor,
+            };
+        });
+
+        // Bind FileSaver — routes through FileTypeRouterService to concrete driver
+        $this->app->singleton(FileSaver::class, function () {
             $driver = FileDriverResolver::resolve();
 
             return new FileTypeRouterService([
                 new SvgFileHandler($driver),
                 new PdfFileHandler($driver),
                 new ImageFileHandler($driver),
-
-                // Other handlers
             ]);
         });
 
@@ -98,7 +117,11 @@ class FileManagerServiceProvider extends ServiceProvider
         $this->app->bind(FileMover::class, function () {
             $deleterConfig = config('file-manager.deleters.local', []);
 
-            return new LocalFileMover($deleterConfig);
+            return new LocalFileMover(
+                config: $deleterConfig,
+                saver: app(FileSaver::class),
+                encryptor: app(ContentEncryptor::class),
+            );
         });
 
         $this->app->singleton('file-mover', function () {

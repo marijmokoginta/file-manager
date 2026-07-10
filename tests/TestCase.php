@@ -17,6 +17,8 @@ abstract class TestCase extends BaseTestCase
 
     protected function getEnvironmentSetUp($app): void
     {
+        $app['config']->set('app.key', 'base64:eDcp6U0W+ejXo8x0BrWvfSxSylo+vdTDB0l/SztnyOk=');
+
         $app['config']->set('file-manager', [
             'default_driver' => 'local',
             'drivers' => [

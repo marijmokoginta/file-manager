@@ -61,6 +61,37 @@ return [
     | API Security
     |--------------------------------------------------------------------------
     */
+    /*
+    |--------------------------------------------------------------------------
+    | Encryption
+    |--------------------------------------------------------------------------
+    |
+    | Enable file content encryption at rest. Supported drivers:
+    |   - 'laravel' — uses Laravel's Crypt facade (requires APP_KEY)
+    |   - 'openssl' — uses PHP's openssl_encrypt/decrypt (requires encryption.key)
+    |
+    | When enabled, files are encrypted before writing to disk and decrypted
+    | when served via the FileController.
+    */
+    'encryption' => [
+        'enabled' => env('FILE_MANAGER_ENCRYPTION_ENABLED', false),
+        'driver' => env('FILE_MANAGER_ENCRYPTION_DRIVER', 'laravel'),
+        'key' => env('FILE_MANAGER_ENCRYPTION_KEY'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | URL Security
+    |--------------------------------------------------------------------------
+    |
+    | When url.secret is set, file paths in URLs are encrypted using AES-256-CBC
+    | instead of plain base64 encoding. URL.base64-encoded paths from previous
+    | versions are still accepted (backward compatible).
+    */
+    'url' => [
+        'secret' => env('FILE_MANAGER_URL_SECRET'),
+    ],
+
     'api' => [
         'token' => env('FILE_MANAGER_API_TOKEN'),
         'allowed_origins' => explode(',', env('FILE_MANAGER_ALLOWED_ORIGINS', '')),

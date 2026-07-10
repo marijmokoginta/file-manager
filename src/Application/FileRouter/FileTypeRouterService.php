@@ -18,13 +18,13 @@ class FileTypeRouterService implements FileSaver
         $this->handlers = collect($handlers);
     }
 
-    public function save($file, string $folder): FileOperationResult
+    public function save($file, string $folder, ?string $fileName = null, ?bool $encrypted = null): FileOperationResult
     {
         $input = $file instanceof FileInput ? $file : FileInputFactory::from($file);
 
         foreach ($this->handlers as $handler) {
             if ($handler->canHandle($input)) {
-                return $handler->handleSave($input, $folder);
+                return $handler->handleSave($input, $folder, $fileName, $encrypted);
             }
         }
 

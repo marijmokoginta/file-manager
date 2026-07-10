@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Storage;
+use M2code\FileManager\Domain\Contracts\ContentEncryptor;
+use M2code\FileManager\Domain\Contracts\FileUrlGenerator;
 use Symfony\Component\HttpFoundation\Response;
 
 class FileController extends Controller
@@ -18,19 +20,24 @@ class FileController extends Controller
             abort_unless($request->hasValidSignature(), Response::HTTP_FORBIDDEN);
         }
 
-        $path = base64_decode($path, true);
-        if ($path === false || $path === '') {
+        // Decode path via the URL generator (supports encrypted + legacy base64)
+        $decodedPath = app(FileUrlGenerator::class)->decodePath($path);
+        if ($decodedPath === null) {
             abort(Response::HTTP_NOT_FOUND);
         }
 
         $storage = Storage::disk($disk);
 
-        if (! $storage->exists($path)) {
+        if (! $storage->exists($decodedPath)) {
             abort(404);
         }
 
-        $mimeType = $storage->mimeType($path);
-        $file = $storage->get($path);
+        $mimeType = $storage->mimeType($decodedPath);
+        $file = $storage->get($decodedPath);
+
+        // Attempt decryption if encryption is enabled
+        $encryptor = app(ContentEncryptor::class);
+        $file = $encryptor->decrypt($file);
 
         return response($file, Response::HTTP_OK)
             ->header('Content-Type', $mimeType);
