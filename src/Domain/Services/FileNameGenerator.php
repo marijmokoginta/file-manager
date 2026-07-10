@@ -8,6 +8,6 @@ class FileNameGenerator
 {
     public static function generate(string $ext = 'bin'): string
     {
-        return Str::random(32) . '.' . $ext;
+        return Str::random(32).'.'.$ext;
     }
 }

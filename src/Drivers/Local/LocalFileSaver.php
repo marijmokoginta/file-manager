@@ -25,7 +25,7 @@ class LocalFileSaver implements FileSaver
 
         $ext = $input->getExtension();
         $fileName = FileNameGenerator::generate($ext);
-        $path = trim($folder, '/') . '/' . $fileName;
+        $path = trim($folder, '/').'/'.$fileName;
         $contents = $input->getContent();
 
         $saved = Storage::disk($this->disk)->put($path, $contents);

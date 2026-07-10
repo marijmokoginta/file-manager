@@ -28,7 +28,7 @@ class FileManagerApiAuth
 
         $bearerToken = $request->bearerToken();
 
-        if (!$bearerToken || !in_array($bearerToken, $validTokens, true)) {
+        if (! $bearerToken || ! in_array($bearerToken, $validTokens, true)) {
             return response()->json([
                 'message' => 'Unauthorized. Invalid or missing API token.',
             ], Response::HTTP_UNAUTHORIZED);

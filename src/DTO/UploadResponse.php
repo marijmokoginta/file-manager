@@ -17,13 +17,13 @@ readonly class UploadResponse implements \JsonSerializable
     public function jsonSerialize(): array
     {
         return [
-            'type'          => $this->type,
-            'tmp_path'      => $this->tmpPath,
-            'tmp_folder'    => $this->tmpFolder,
+            'type' => $this->type,
+            'tmp_path' => $this->tmpPath,
+            'tmp_folder' => $this->tmpFolder,
             'original_name' => $this->originalName,
-            'size'          => $this->size,
-            'mime_type'     => $this->mimeType,
-            'extra'         => (object) $this->extra,
+            'size' => $this->size,
+            'mime_type' => $this->mimeType,
+            'extra' => (object) $this->extra,
         ];
     }
 }

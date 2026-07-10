@@ -43,7 +43,7 @@ class FileMoverTest extends TestCase
     {
         config()->set('filesystems.disks.custom', [
             'driver' => 'local',
-            'root' => __DIR__ . '/../storage/custom',
+            'root' => __DIR__.'/../storage/custom',
         ]);
 
         $tmpFile = UploadedFile::fake()->image('photo.png', 100, 100);

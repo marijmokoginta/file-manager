@@ -26,22 +26,22 @@ class LocalFileMover implements FileMover
         $tmpStorage = Storage::disk($this->tmpDisk);
         $targetStorage = Storage::disk($targetDisk);
 
-        if (!$tmpStorage->exists($tmpPath)) {
+        if (! $tmpStorage->exists($tmpPath)) {
             throw new RuntimeException("Source file not found in tmp storage: {$tmpPath}");
         }
 
         $fileName = basename($tmpPath);
-        $destinationPath = trim($destinationFolder, '/') . '/' . $fileName;
+        $destinationPath = trim($destinationFolder, '/').'/'.$fileName;
 
         $contents = $tmpStorage->get($tmpPath);
         $saved = $targetStorage->put($destinationPath, $contents);
 
-        if (!$saved) {
+        if (! $saved) {
             throw new RuntimeException("Failed to move file to: {$destinationPath}");
         }
 
         // Verify the file exists on target before deleting from tmp
-        if (!$targetStorage->exists($destinationPath)) {
+        if (! $targetStorage->exists($destinationPath)) {
             throw new RuntimeException("File verification failed after move: {$destinationPath}");
         }
 

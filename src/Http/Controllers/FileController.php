@@ -25,7 +25,7 @@ class FileController extends Controller
 
         $storage = Storage::disk($disk);
 
-        if (!$storage->exists($path)) {
+        if (! $storage->exists($path)) {
             abort(404);
         }
 

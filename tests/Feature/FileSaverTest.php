@@ -8,6 +8,7 @@ use M2code\FileManager\Facades\FileManager;
 use M2code\FileManager\tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 use RuntimeException;
+
 use function PHPUnit\Framework\assertNotNull;
 
 class FileSaverTest extends TestCase
@@ -30,7 +31,7 @@ class FileSaverTest extends TestCase
     {
         Storage::fake('public');
 
-        $dataUri = 'data:image/png;base64,' .
+        $dataUri = 'data:image/png;base64,'.
             'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAukB9sJfDgAAAABJRU5ErkJggg==';
 
         $result = FileManager::save($dataUri, 'testing');
@@ -45,7 +46,7 @@ class FileSaverTest extends TestCase
         Storage::fake('public');
 
         $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10"/></svg>';
-        $dataUri = 'data:image/svg+xml;base64,' . base64_encode($svg);
+        $dataUri = 'data:image/svg+xml;base64,'.base64_encode($svg);
 
         $result = FileManager::save($dataUri, 'testing');
 
@@ -100,7 +101,7 @@ class FileSaverTest extends TestCase
         Storage::fake('public');
 
         $pdfContent = '%PDF-1.4 test content';
-        $dataUri = 'data:application/pdf;base64,' . base64_encode($pdfContent);
+        $dataUri = 'data:application/pdf;base64,'.base64_encode($pdfContent);
 
         $result = FileManager::save($dataUri, 'testing');
 

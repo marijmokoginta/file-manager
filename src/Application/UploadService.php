@@ -56,7 +56,7 @@ class UploadService
      */
     public function isCancelled(?string $token): bool
     {
-        if (!$token) {
+        if (! $token) {
             return false;
         }
 
@@ -72,7 +72,7 @@ class UploadService
 
     protected function cancelCacheKey(string $token): string
     {
-        return 'file-manager:cancel:' . $token;
+        return 'file-manager:cancel:'.$token;
     }
 
     protected function validateSize(FileInput $input): void
@@ -111,7 +111,7 @@ class UploadService
             }
         }
 
-        throw new RuntimeException('Unsupported file type: ' . $input->getMimeType());
+        throw new RuntimeException('Unsupported file type: '.$input->getMimeType());
     }
 
     protected function resolveTmpDriver(): FileSaver
@@ -125,7 +125,7 @@ class UploadService
     {
         $prefix = Config::get('file-manager.tmp.prefix', 'tmp/uploads');
 
-        return trim($prefix, '/') . '/' . (string) Str::uuid();
+        return trim($prefix, '/').'/'.(string) Str::uuid();
     }
 
     protected function resolveCategory(string $mimeType): string
@@ -151,7 +151,7 @@ class UploadService
     {
         $enabled = Config::get('file-manager.upload.retry.enabled', true);
 
-        if (!$enabled) {
+        if (! $enabled) {
             return $callback();
         }
 
@@ -180,9 +180,9 @@ class UploadService
     protected function formatSize(float $sizeKiB): string
     {
         if ($sizeKiB >= 1024) {
-            return round($sizeKiB / 1024, 2) . ' MiB';
+            return round($sizeKiB / 1024, 2).' MiB';
         }
 
-        return round($sizeKiB, 2) . ' KiB';
+        return round($sizeKiB, 2).' KiB';
     }
 }

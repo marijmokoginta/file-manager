@@ -15,9 +15,9 @@ class UploadFormRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'file'         => ['required'],
-            'options'      => ['sometimes', 'array'],
-            'options.*'    => ['sometimes'],
+            'file' => ['required'],
+            'options' => ['sometimes', 'array'],
+            'options.*' => ['sometimes'],
             'cancel_token' => ['sometimes', 'string'],
         ];
     }
@@ -42,7 +42,7 @@ class UploadFormRequest extends FormRequest
 
     protected function convertBase64ToUploadedFile(string $dataUri): UploadedFile
     {
-        if (!preg_match('#^data:([^;]+);base64,(.+)$#s', $dataUri, $matches)) {
+        if (! preg_match('#^data:([^;]+);base64,(.+)$#s', $dataUri, $matches)) {
             abort(422, 'Invalid base64 data URI format.');
         }
 
@@ -59,7 +59,7 @@ class UploadFormRequest extends FormRequest
 
         return new UploadedFile(
             $tmpPath,
-            'upload.' . $extension,
+            'upload.'.$extension,
             $mimeType,
             null,
             true,

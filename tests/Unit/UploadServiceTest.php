@@ -126,7 +126,7 @@ class UploadServiceTest extends TestCase
         config()->set('file-manager.validation.max_file_size.document', 1); // 1 KiB
 
         $tmpPath = tempnam(sys_get_temp_dir(), 'fm_test_');
-        file_put_contents($tmpPath, "%PDF-1.4\n" . random_bytes(5 * 1024));
+        file_put_contents($tmpPath, "%PDF-1.4\n".random_bytes(5 * 1024));
         $file = new UploadedFile($tmpPath, 'large.pdf', 'application/pdf', null, true);
 
         try {
@@ -175,9 +175,9 @@ class UploadServiceTest extends TestCase
     public function image_default_options_can_be_overridden_via_config(): void
     {
         config()->set('file-manager.upload.default_options.image', [
-            'optimize'    => false,
-            'blurhash'    => false,
-            'watermark'   => true,
+            'optimize' => false,
+            'blurhash' => false,
+            'watermark' => true,
             'low_quality' => false,
         ]);
 

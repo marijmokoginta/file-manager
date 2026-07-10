@@ -7,11 +7,12 @@ use RuntimeException;
 class Base64FileInput implements FileInput
 {
     protected string $mimeType;
+
     protected string $content;
 
     public function __construct(protected string $dataUri)
     {
-        if (!preg_match('#^data:(.*?);base64,(.*)$#s', $dataUri, $matches)) {
+        if (! preg_match('#^data:(.*?);base64,(.*)$#s', $dataUri, $matches)) {
             throw new RuntimeException('Invalid base64 data URI format.');
         }
 

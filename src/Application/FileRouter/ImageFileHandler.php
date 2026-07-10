@@ -2,13 +2,13 @@
 
 namespace M2code\FileManager\Application\FileRouter;
 
+use Illuminate\Support\Facades\Config;
 use M2code\FileManager\Application\FileInput\FileInput;
 use M2code\FileManager\Application\Uploader\ImageUploader;
 use M2code\FileManager\Domain\Contracts\FileSaver;
 use M2code\FileManager\Domain\Contracts\FileTypeHandler;
 use M2code\FileManager\DTO\FileOperationResult;
 use M2code\FileManager\DTO\UploadResponse;
-use Illuminate\Support\Facades\Config;
 
 class ImageFileHandler implements FileTypeHandler
 {
@@ -38,7 +38,7 @@ class ImageFileHandler implements FileTypeHandler
         $result = $uploader->withOptions($mergedOptions)->upload($input, $folder, $this->driver);
 
         $extra = [];
-        if (!empty($result->blurhash)) {
+        if (! empty($result->blurhash)) {
             $extra['blurhash'] = $result->blurhash;
         }
         if ($result->optimizedPath) {
@@ -70,11 +70,12 @@ class ImageFileHandler implements FileTypeHandler
     public function defaultOptions(): array
     {
         $defaults = Config::get('file-manager.upload.default_options.image', []);
+
         return array_merge(
             [
-                'optimize'    => false,
-                'blurhash'    => false,
-                'watermark'   => false,
+                'optimize' => false,
+                'blurhash' => false,
+                'watermark' => false,
                 'low_quality' => false,
             ],
             $defaults,

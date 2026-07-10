@@ -16,3 +16,6 @@ opencode.json
 # Dependencies & cache
 composer.lock
 .phpunit.result.cache
+
+# Test artifacts
+tests/storage/

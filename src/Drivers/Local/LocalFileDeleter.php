@@ -22,7 +22,7 @@ class LocalFileDeleter implements FileDeleter
         }
 
         $storage = Storage::disk($this->disk);
-        if (!$storage->exists($path)) {
+        if (! $storage->exists($path)) {
             return true;
         }
 

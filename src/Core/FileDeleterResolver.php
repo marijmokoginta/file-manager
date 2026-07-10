@@ -21,7 +21,7 @@ class FileDeleterResolver
 
         $deleterConfig = $deleters[$active] ?? null;
 
-        if (!$deleterConfig || !class_exists($deleterConfig['class'])) {
+        if (! $deleterConfig || ! class_exists($deleterConfig['class'])) {
             throw new RuntimeException("FileManager: Invalid deleter [$active]");
         }
 

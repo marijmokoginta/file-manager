@@ -276,7 +276,7 @@ class FileUploadApiTest extends TestCase
         config()->set('file-manager.validation.max_file_size.document', 1); // 1 KiB
 
         $tmpPath = tempnam(sys_get_temp_dir(), 'fm_test_');
-        file_put_contents($tmpPath, "%PDF-1.4\n" . random_bytes(5 * 1024));
+        file_put_contents($tmpPath, "%PDF-1.4\n".random_bytes(5 * 1024));
         $file = new UploadedFile($tmpPath, 'large.pdf', 'application/pdf', null, true);
 
         $response = $this->postJson('/upload', ['file' => $file], [
@@ -294,7 +294,7 @@ class FileUploadApiTest extends TestCase
         config()->set('file-manager.validation.max_file_size.document', 1); // 1 KiB
 
         $tmpPath = tempnam(sys_get_temp_dir(), 'fm_test_');
-        file_put_contents($tmpPath, "%PDF-1.4\n" . random_bytes(2048 * 1024));
+        file_put_contents($tmpPath, "%PDF-1.4\n".random_bytes(2048 * 1024));
         $file = new UploadedFile($tmpPath, 'large.pdf', 'application/pdf', null, true);
 
         $response = $this->postJson('/upload', ['file' => $file], [
@@ -440,7 +440,7 @@ class FileUploadApiTest extends TestCase
     public function it_uploads_image_via_base64_data_uri(): void
     {
         $file = UploadedFile::fake()->image('photo.png', 100, 100);
-        $base64 = 'data:image/png;base64,' . base64_encode(file_get_contents($file->getRealPath()));
+        $base64 = 'data:image/png;base64,'.base64_encode(file_get_contents($file->getRealPath()));
 
         $response = $this->postJson('/upload', ['file' => $base64], [
             'Authorization' => 'Bearer test-token',
@@ -461,7 +461,7 @@ class FileUploadApiTest extends TestCase
     public function it_uploads_svg_via_base64_data_uri(): void
     {
         $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect width="20" height="20"/></svg>';
-        $base64 = 'data:image/svg+xml;base64,' . base64_encode($svg);
+        $base64 = 'data:image/svg+xml;base64,'.base64_encode($svg);
 
         $response = $this->postJson('/upload', ['file' => $base64], [
             'Authorization' => 'Bearer test-token',
@@ -479,7 +479,7 @@ class FileUploadApiTest extends TestCase
     public function it_uploads_pdf_via_base64_data_uri(): void
     {
         $pdfContent = "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n%%EOF";
-        $base64 = 'data:application/pdf;base64,' . base64_encode($pdfContent);
+        $base64 = 'data:application/pdf;base64,'.base64_encode($pdfContent);
 
         $response = $this->postJson('/upload', ['file' => $base64], [
             'Authorization' => 'Bearer test-token',
@@ -517,7 +517,7 @@ class FileUploadApiTest extends TestCase
     public function base64_upload_supports_options(): void
     {
         $file = UploadedFile::fake()->image('photo.png', 100, 100);
-        $base64 = 'data:image/png;base64,' . base64_encode(file_get_contents($file->getRealPath()));
+        $base64 = 'data:image/png;base64,'.base64_encode(file_get_contents($file->getRealPath()));
 
         $response = $this->postJson('/upload', [
             'file' => $base64,

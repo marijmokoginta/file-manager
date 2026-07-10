@@ -37,7 +37,7 @@ class UploadController extends Controller
     {
         $token = $request->input('cancel_token');
 
-        if (!$token) {
+        if (! $token) {
             return response()->json([
                 'message' => 'cancel_token is required.',
             ], Response::HTTP_UNPROCESSABLE_ENTITY);

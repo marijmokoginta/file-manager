@@ -12,7 +12,7 @@ class FileVariantsTest extends TestCase
     #[Test]
     public function test_it_can_add_and_retrieve_variants(): void
     {
-        $variants = new FileVariants();
+        $variants = new FileVariants;
         $variants->add(new FileVariant('original', 'uploads/original.jpg'));
         $variants->add(new FileVariant('low_quality', 'uploads/low.jpg'));
 
@@ -24,7 +24,7 @@ class FileVariantsTest extends TestCase
     #[Test]
     public function test_it_returns_all_variants_and_paths(): void
     {
-        $variants = new FileVariants();
+        $variants = new FileVariants;
         $variants->add(new FileVariant('original', 'uploads/original.jpg'));
         $variants->add(new FileVariant('low_quality', 'uploads/low.jpg'));
         $variants->add(new FileVariant('watermark', 'uploads/watermark.jpg'));

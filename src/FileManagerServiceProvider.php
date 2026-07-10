@@ -2,6 +2,8 @@
 
 namespace M2code\FileManager;
 
+use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use M2code\FileManager\Application\FileManagerService;
 use M2code\FileManager\Application\FileRouter\FileTypeRouterService;
@@ -25,12 +27,10 @@ use M2code\FileManager\Domain\Contracts\FileMover;
 use M2code\FileManager\Domain\Contracts\FileSaver;
 use M2code\FileManager\Domain\Contracts\FileUrlGenerator;
 use M2code\FileManager\Drivers\Local\LocalFileMover;
-use Illuminate\Console\Scheduling\Schedule;
-use Illuminate\Routing\Router;
+use M2code\FileManager\Http\Middleware\FileManagerApiAuth;
 
 class FileManagerServiceProvider extends ServiceProvider
 {
-
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/config/file-manager.php', 'file-manager');
@@ -51,10 +51,10 @@ class FileManagerServiceProvider extends ServiceProvider
             return FileDeleterResolver::resolve();
         });
 
-        $this->app->bind(GenerateBlurAction::class, fn () => new GenerateBlurAction());
-        $this->app->bind(GenerateLowQualityAction::class, fn () => new GenerateLowQualityAction());
-        $this->app->bind(ApplyWatermarkAction::class, fn () => new ApplyWatermarkAction());
-        $this->app->bind(GenerateOptimizedImageAction::class, fn () => new GenerateOptimizedImageAction());
+        $this->app->bind(GenerateBlurAction::class, fn () => new GenerateBlurAction);
+        $this->app->bind(GenerateLowQualityAction::class, fn () => new GenerateLowQualityAction);
+        $this->app->bind(ApplyWatermarkAction::class, fn () => new ApplyWatermarkAction);
+        $this->app->bind(GenerateOptimizedImageAction::class, fn () => new GenerateOptimizedImageAction);
 
         $this->app->bind(ImageProcessor::class, function ($app) {
             return new ImageProcessor(
@@ -93,7 +93,7 @@ class FileManagerServiceProvider extends ServiceProvider
             return app(FileUrlGenerator::class);
         });
 
-        $this->app->singleton(UploadService::class, fn () => new UploadService());
+        $this->app->singleton(UploadService::class, fn () => new UploadService);
 
         $this->app->bind(FileMover::class, function () {
             $deleterConfig = config('file-manager.deleters.local', []);
@@ -109,7 +109,7 @@ class FileManagerServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->publishes([
-            __DIR__.'/config/file-manager.php' => config_path('file-manager.php')
+            __DIR__.'/config/file-manager.php' => config_path('file-manager.php'),
         ], 'config');
 
         $this->registerMiddleware();
@@ -130,7 +130,7 @@ class FileManagerServiceProvider extends ServiceProvider
     {
         $router = $this->app->make(Router::class);
 
-        $router->aliasMiddleware('file-manager.api', \M2code\FileManager\Http\Middleware\FileManagerApiAuth::class);
+        $router->aliasMiddleware('file-manager.api', FileManagerApiAuth::class);
     }
 
     protected function registerScheduler(): void
@@ -139,5 +139,4 @@ class FileManagerServiceProvider extends ServiceProvider
             $schedule->command('file-manager:clean-tmp')->daily();
         });
     }
-
 }

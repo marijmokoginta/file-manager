@@ -13,9 +13,13 @@ use M2code\FileManager\DTO\ImageUploadResult;
 class ImageUploader
 {
     protected bool $blur = false;
+
     protected bool $watermark = false;
+
     protected bool $lowQuality = false;
+
     protected bool $optimize = false;
+
     protected string $optimizeFormat = 'avif';
 
     public function __construct(
@@ -28,9 +32,27 @@ class ImageUploader
         return app(self::class);
     }
 
-    public function blur(): self { $this->blur = true; return $this; }
-    public function watermark(): self { $this->watermark = true; return $this; }
-    public function lowQuality(): self { $this->lowQuality = true; return $this; }
+    public function blur(): self
+    {
+        $this->blur = true;
+
+        return $this;
+    }
+
+    public function watermark(): self
+    {
+        $this->watermark = true;
+
+        return $this;
+    }
+
+    public function lowQuality(): self
+    {
+        $this->lowQuality = true;
+
+        return $this;
+    }
+
     public function optimize(string $format = 'avif'): self
     {
         $this->optimize = true;
@@ -39,24 +61,39 @@ class ImageUploader
         return $this;
     }
 
-    public function enableBlur(): self { return $this->blur(); }
-    public function enableWatermark(): self { return $this->watermark(); }
-    public function enableLowQuality(): self { return $this->lowQuality(); }
-    public function enableOptimize(string $format = 'avif'): self { return $this->optimize($format); }
+    public function enableBlur(): self
+    {
+        return $this->blur();
+    }
+
+    public function enableWatermark(): self
+    {
+        return $this->watermark();
+    }
+
+    public function enableLowQuality(): self
+    {
+        return $this->lowQuality();
+    }
+
+    public function enableOptimize(string $format = 'avif'): self
+    {
+        return $this->optimize($format);
+    }
 
     public function withOptions(array $options): self
     {
         foreach ($options as $key => $value) {
-            if (!is_bool($value)) {
+            if (! is_bool($value)) {
                 continue;
             }
 
             match ($key) {
-                'blurhash'    => $this->blur = $value,
-                'watermark'   => $this->watermark = $value,
+                'blurhash' => $this->blur = $value,
+                'watermark' => $this->watermark = $value,
                 'low_quality' => $this->lowQuality = $value,
-                'optimize'    => $this->optimize = $value,
-                default       => null,
+                'optimize' => $this->optimize = $value,
+                default => null,
             };
         }
 
@@ -71,7 +108,7 @@ class ImageUploader
         $isSvg = $input->getMimeType() === 'image/svg+xml';
 
         $original = $saver->save($input, $folder);
-        $variants = new FileVariants();
+        $variants = new FileVariants;
         $variants->add(new FileVariant('original', $original->filePath));
 
         if ($isSvg) {

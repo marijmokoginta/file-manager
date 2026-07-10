@@ -14,11 +14,13 @@ class FileExtensionHelper
 
         if (is_string($file) && str_starts_with($file, 'data:')) {
             $mime = self::extractMimeType($file);
+
             return self::mapMimeToExtension($mime);
         }
 
         if (is_string($file)) {
             $ext = pathinfo(parse_url($file, PHP_URL_PATH), PATHINFO_EXTENSION);
+
             return $ext ?: 'bin';
         }
 
@@ -30,6 +32,7 @@ class FileExtensionHelper
         if (preg_match('#^data:(.*?);base64,#', $dataUri, $matches)) {
             return $matches[1];
         }
+
         return null;
     }
 

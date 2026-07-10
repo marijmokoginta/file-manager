@@ -22,7 +22,7 @@ class GenerateBlurAction implements ImageAction
         return $this->generateBlurhash($image);
     }
 
-    protected function generateBlurhash (ImageInterface $image): string
+    protected function generateBlurhash(ImageInterface $image): string
     {
         $width = $image->width();
         $height = $image->height();
@@ -30,17 +30,17 @@ class GenerateBlurAction implements ImageAction
         $pixels = [];
         for ($y = 0; $y < $height; $y++) {
             $row = [];
-            for ($x = 0; $x < $width; ++$x) {
+            for ($x = 0; $x < $width; $x++) {
                 $colors = $image->pickColor($x, $y);
 
-                if (!($colors instanceof RgbColor)) {
-                    $colors = $colors->convertTo(new RgbColorSpace());
+                if (! ($colors instanceof RgbColor)) {
+                    $colors = $colors->convertTo(new RgbColorSpace);
                 }
 
                 $row[] = [
                     $colors->channel(Red::class)->value(),
                     $colors->channel(Green::class)->value(),
-                    $colors->channel(Blue::class)->value()
+                    $colors->channel(Blue::class)->value(),
                 ];
             }
             $pixels[] = $row;
