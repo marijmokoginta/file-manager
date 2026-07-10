@@ -233,7 +233,7 @@ Expected output: "Saved at: test/..." with a file path. If this fails, the packa
 Run the full test suite to identify issues:
 
 ```bash
-vendor/bin/phpunit -c src/phpunit.xml
+vendor/bin/phpunit -c phpunit.xml
 ```
 
 82 tests should pass. Any failures indicate a configuration or environment issue.

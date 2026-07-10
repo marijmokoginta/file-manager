@@ -8,6 +8,11 @@
             "M2code\\FileManager\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "M2code\\FileManager\\tests\\": "tests/"
+        }
+    },
     "extra": {
         "laravel": {
             "providers": [

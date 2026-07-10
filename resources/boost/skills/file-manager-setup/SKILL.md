@@ -156,7 +156,7 @@ This uploads a dummy SVG and confirms the package is working. Expected output in
 For a full test suite run:
 
 ```bash
-vendor/bin/phpunit -c src/phpunit.xml
+vendor/bin/phpunit -c phpunit.xml
 ```
 
 ## What to do next
