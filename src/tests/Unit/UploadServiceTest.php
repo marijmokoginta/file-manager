@@ -4,6 +4,7 @@ namespace M2code\FileManager\tests\Unit;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use M2code\FileManager\Application\UploadCancelledException;
 use M2code\FileManager\Application\UploadService;
 use M2code\FileManager\tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
@@ -204,5 +205,54 @@ class UploadServiceTest extends TestCase
 
         Storage::disk('public')->assertMissing($result->tmpPath);
         Storage::disk('public')->assertMissing($result->extra['watermark_path']);
+    }
+
+    // ── Cancel Token ──────────────────────────────────────────────
+
+    #[Test]
+    public function it_throws_when_cancel_token_is_marked_cancelled(): void
+    {
+        $token = 'my-cancel-token';
+        $this->service->cancel($token);
+
+        $file = UploadedFile::fake()->image('test.png', 100, 100);
+
+        $this->expectException(UploadCancelledException::class);
+        $this->service->upload($file, [], $token);
+    }
+
+    #[Test]
+    public function it_allows_upload_when_token_not_cancelled(): void
+    {
+        $file = UploadedFile::fake()->image('test.png', 100, 100);
+
+        $result = $this->service->upload($file, [], 'fresh-token');
+
+        $this->assertEquals('image', $result->type);
+    }
+
+    #[Test]
+    public function it_allows_upload_without_token(): void
+    {
+        $file = UploadedFile::fake()->image('test.png', 100, 100);
+
+        $result = $this->service->upload($file);
+
+        $this->assertEquals('image', $result->type);
+    }
+
+    #[Test]
+    public function is_cancelled_returns_false_for_unknown_token(): void
+    {
+        $this->assertFalse($this->service->isCancelled('unknown-token'));
+    }
+
+    #[Test]
+    public function is_cancelled_returns_true_for_cancelled_token(): void
+    {
+        $token = 'will-be-cancelled';
+        $this->service->cancel($token);
+
+        $this->assertTrue($this->service->isCancelled($token));
     }
 }

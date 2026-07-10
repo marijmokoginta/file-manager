@@ -14,3 +14,7 @@ $middleware = Config::get('file-manager.api.middleware', 'file-manager.api');
 Route::post('upload', [UploadController::class, 'upload'])
     ->middleware($middleware)
     ->name('file-manager.upload');
+
+Route::post('upload/cancel', [UploadController::class, 'cancel'])
+    ->middleware($middleware)
+    ->name('file-manager.upload.cancel');

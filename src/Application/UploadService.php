@@ -2,6 +2,7 @@
 
 namespace M2code\FileManager\Application;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
 use M2code\FileManager\Application\FileInput\FileInput;
@@ -19,15 +20,59 @@ use Throwable;
 
 class UploadService
 {
-    public function upload(mixed $file, array $options = []): UploadResponse
+    public function upload(mixed $file, array $options = [], ?string $cancelToken = null): UploadResponse
     {
+        $this->assertNotCancelled($cancelToken);
+
         $input = FileInputFactory::from($file);
 
         $this->validateSize($input);
+
+        $this->assertNotCancelled($cancelToken);
+
         $handler = $this->resolveHandler($input);
         $folder = $this->generateTmpFolder();
 
+        $this->assertNotCancelled($cancelToken);
+
         return $this->retry(fn () => $handler->handleUpload($input, $folder, $options));
+    }
+
+    /**
+     * Mark a cancel token as cancelled. Subsequent uploads with this token
+     * will throw UploadCancelledException.
+     */
+    public function cancel(string $token): void
+    {
+        Cache::put(
+            $this->cancelCacheKey($token),
+            true,
+            now()->addMinutes(10),
+        );
+    }
+
+    /**
+     * Check if the cancel token has been marked as cancelled.
+     */
+    public function isCancelled(?string $token): bool
+    {
+        if (!$token) {
+            return false;
+        }
+
+        return Cache::has($this->cancelCacheKey($token));
+    }
+
+    protected function assertNotCancelled(?string $token): void
+    {
+        if ($this->isCancelled($token)) {
+            throw new UploadCancelledException((string) $token);
+        }
+    }
+
+    protected function cancelCacheKey(string $token): string
+    {
+        return 'file-manager:cancel:' . $token;
     }
 
     protected function validateSize(FileInput $input): void

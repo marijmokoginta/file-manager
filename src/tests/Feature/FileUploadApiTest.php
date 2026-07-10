@@ -433,4 +433,211 @@ class FileUploadApiTest extends TestCase
         $response->assertCreated();
         $this->assertEquals('my-avatar.png', $response->json('original_name'));
     }
+
+    // ── Base64 Upload ─────────────────────────────────────────────────
+
+    #[Test]
+    public function it_uploads_image_via_base64_data_uri(): void
+    {
+        $file = UploadedFile::fake()->image('photo.png', 100, 100);
+        $base64 = 'data:image/png;base64,' . base64_encode(file_get_contents($file->getRealPath()));
+
+        $response = $this->postJson('/upload', ['file' => $base64], [
+            'Authorization' => 'Bearer test-token',
+        ]);
+
+        $response->assertCreated();
+        $data = $response->json();
+
+        $this->assertEquals('image', $data['type']);
+        $this->assertEquals('image/png', $data['mime_type']);
+        $this->assertStringStartsWith('tmp/uploads/', $data['tmp_path']);
+        $this->assertArrayHasKey('blurhash', $data['extra']);
+
+        Storage::disk('tmp')->assertExists($data['tmp_path']);
+    }
+
+    #[Test]
+    public function it_uploads_svg_via_base64_data_uri(): void
+    {
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect width="20" height="20"/></svg>';
+        $base64 = 'data:image/svg+xml;base64,' . base64_encode($svg);
+
+        $response = $this->postJson('/upload', ['file' => $base64], [
+            'Authorization' => 'Bearer test-token',
+        ]);
+
+        $response->assertCreated();
+        $data = $response->json();
+
+        $this->assertEquals('svg', $data['type']);
+        $this->assertEmpty($data['extra']);
+        Storage::disk('tmp')->assertExists($data['tmp_path']);
+    }
+
+    #[Test]
+    public function it_uploads_pdf_via_base64_data_uri(): void
+    {
+        $pdfContent = "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n%%EOF";
+        $base64 = 'data:application/pdf;base64,' . base64_encode($pdfContent);
+
+        $response = $this->postJson('/upload', ['file' => $base64], [
+            'Authorization' => 'Bearer test-token',
+        ]);
+
+        $response->assertCreated();
+        $data = $response->json();
+
+        $this->assertEquals('document', $data['type']);
+        $this->assertStringEndsWith('.pdf', $data['tmp_path']);
+        Storage::disk('tmp')->assertExists($data['tmp_path']);
+    }
+
+    #[Test]
+    public function it_rejects_invalid_base64_format(): void
+    {
+        $response = $this->postJson('/upload', ['file' => 'not-a-valid-data-uri'], [
+            'Authorization' => 'Bearer test-token',
+        ]);
+
+        $response->assertUnprocessable();
+    }
+
+    #[Test]
+    public function it_rejects_base64_with_invalid_content(): void
+    {
+        $response = $this->postJson('/upload', ['file' => 'data:image/png;base64,!!!invalid!!!'], [
+            'Authorization' => 'Bearer test-token',
+        ]);
+
+        $response->assertUnprocessable();
+    }
+
+    #[Test]
+    public function base64_upload_supports_options(): void
+    {
+        $file = UploadedFile::fake()->image('photo.png', 100, 100);
+        $base64 = 'data:image/png;base64,' . base64_encode(file_get_contents($file->getRealPath()));
+
+        $response = $this->postJson('/upload', [
+            'file' => $base64,
+            'options' => [
+                'blurhash' => false,
+                'optimize' => false,
+                'watermark' => true,
+            ],
+        ], [
+            'Authorization' => 'Bearer test-token',
+        ]);
+
+        $response->assertCreated();
+        $data = $response->json();
+
+        $this->assertArrayNotHasKey('blurhash', $data['extra']);
+        $this->assertArrayNotHasKey('optimized_path', $data['extra']);
+        $this->assertArrayHasKey('watermark_path', $data['extra']);
+    }
+
+    // ── Cancel Token ──────────────────────────────────────────────────
+
+    #[Test]
+    public function it_accepts_cancel_token_and_completes_normally(): void
+    {
+        $file = UploadedFile::fake()->image('photo.png', 100, 100);
+
+        $response = $this->postJson('/upload', [
+            'file' => $file,
+            'cancel_token' => 'not-cancelled-token',
+        ], [
+            'Authorization' => 'Bearer test-token',
+        ]);
+
+        $response->assertCreated();
+    }
+
+    #[Test]
+    public function cancel_endpoint_marks_token_as_cancelled(): void
+    {
+        $response = $this->postJson('/upload/cancel', [
+            'cancel_token' => 'cancel-me',
+        ], [
+            'Authorization' => 'Bearer test-token',
+        ]);
+
+        $response->assertOk();
+        $this->assertEquals('Upload cancelled.', $response->json('message'));
+    }
+
+    #[Test]
+    public function cancel_endpoint_requires_token(): void
+    {
+        $response = $this->postJson('/upload/cancel', [], [
+            'Authorization' => 'Bearer test-token',
+        ]);
+
+        $response->assertUnprocessable();
+    }
+
+    #[Test]
+    public function upload_with_cancelled_token_is_rejected(): void
+    {
+        $token = 'should-fail-token';
+
+        // First, cancel the token
+        $this->postJson('/upload/cancel', ['cancel_token' => $token], [
+            'Authorization' => 'Bearer test-token',
+        ])->assertOk();
+
+        // Then try to upload with it
+        $file = UploadedFile::fake()->image('photo.png', 100, 100);
+
+        $response = $this->postJson('/upload', [
+            'file' => $file,
+            'cancel_token' => $token,
+        ], [
+            'Authorization' => 'Bearer test-token',
+        ]);
+
+        $response->assertStatus(499);
+    }
+
+    #[Test]
+    public function different_tokens_do_not_interfere(): void
+    {
+        // Cancel token-a
+        $this->postJson('/upload/cancel', ['cancel_token' => 'token-a'], [
+            'Authorization' => 'Bearer test-token',
+        ])->assertOk();
+
+        // Upload with token-b should succeed
+        $file = UploadedFile::fake()->image('photo.png', 100, 100);
+
+        $response = $this->postJson('/upload', [
+            'file' => $file,
+            'cancel_token' => 'token-b',
+        ], [
+            'Authorization' => 'Bearer test-token',
+        ]);
+
+        $response->assertCreated();
+    }
+
+    #[Test]
+    public function cancel_token_via_header_is_accepted(): void
+    {
+        $token = 'header-cancel-token';
+
+        $this->postJson('/upload/cancel', ['cancel_token' => $token], [
+            'Authorization' => 'Bearer test-token',
+        ])->assertOk();
+
+        $file = UploadedFile::fake()->image('photo.png', 100, 100);
+
+        $response = $this->postJson('/upload', ['file' => $file], [
+            'Authorization' => 'Bearer test-token',
+            'X-Cancel-Token' => $token,
+        ]);
+
+        $response->assertStatus(499);
+    }
 }
