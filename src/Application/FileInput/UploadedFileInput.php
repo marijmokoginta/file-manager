@@ -33,4 +33,9 @@ class UploadedFileInput implements FileInput
     {
         return strtolower($this->file->getClientOriginalExtension() ?: 'bin');
     }
+
+    public function getClientOriginalName(): ?string
+    {
+        return $this->file->getClientOriginalName();
+    }
 }

@@ -2,6 +2,7 @@
 
 namespace M2code\FileManager\Application\Uploader;
 
+use M2code\FileManager\Application\FileInput\FileInput;
 use M2code\FileManager\Application\FileInput\FileInputFactory;
 use M2code\FileManager\Application\Image\ImageProcessor;
 use M2code\FileManager\Domain\Contracts\FileSaver;
@@ -12,9 +13,13 @@ use M2code\FileManager\DTO\ImageUploadResult;
 class ImageUploader
 {
     protected bool $blur = false;
+
     protected bool $watermark = false;
+
     protected bool $lowQuality = false;
+
     protected bool $optimize = false;
+
     protected string $optimizeFormat = 'avif';
 
     public function __construct(
@@ -27,9 +32,27 @@ class ImageUploader
         return app(self::class);
     }
 
-    public function blur(): self { $this->blur = true; return $this; }
-    public function watermark(): self { $this->watermark = true; return $this; }
-    public function lowQuality(): self { $this->lowQuality = true; return $this; }
+    public function blur(): self
+    {
+        $this->blur = true;
+
+        return $this;
+    }
+
+    public function watermark(): self
+    {
+        $this->watermark = true;
+
+        return $this;
+    }
+
+    public function lowQuality(): self
+    {
+        $this->lowQuality = true;
+
+        return $this;
+    }
+
     public function optimize(string $format = 'avif'): self
     {
         $this->optimize = true;
@@ -38,18 +61,54 @@ class ImageUploader
         return $this;
     }
 
-    public function enableBlur(): self { return $this->blur(); }
-    public function enableWatermark(): self { return $this->watermark(); }
-    public function enableLowQuality(): self { return $this->lowQuality(); }
-    public function enableOptimize(string $format = 'avif'): self { return $this->optimize($format); }
-
-    public function upload($file, string $folder): ImageUploadResult
+    public function enableBlur(): self
     {
+        return $this->blur();
+    }
+
+    public function enableWatermark(): self
+    {
+        return $this->watermark();
+    }
+
+    public function enableLowQuality(): self
+    {
+        return $this->lowQuality();
+    }
+
+    public function enableOptimize(string $format = 'avif'): self
+    {
+        return $this->optimize($format);
+    }
+
+    public function withOptions(array $options): self
+    {
+        foreach ($options as $key => $value) {
+            if (! is_bool($value)) {
+                continue;
+            }
+
+            match ($key) {
+                'blurhash' => $this->blur = $value,
+                'watermark' => $this->watermark = $value,
+                'low_quality' => $this->lowQuality = $value,
+                'optimize' => $this->optimize = $value,
+                default => null,
+            };
+        }
+
+        return $this;
+    }
+
+    public function upload($file, string $folder, ?FileSaver $driver = null): ImageUploadResult
+    {
+        $saver = $driver ?? $this->driver;
+
         $input = FileInputFactory::from($file);
         $isSvg = $input->getMimeType() === 'image/svg+xml';
 
-        $original = $this->driver->save($input, $folder);
-        $variants = new FileVariants();
+        $original = $saver->save($input, $folder);
+        $variants = new FileVariants;
         $variants->add(new FileVariant('original', $original->filePath));
 
         if ($isSvg) {
@@ -65,10 +124,10 @@ class ImageUploader
             ->withWatermark($this->watermark)
             ->withLowQuality($this->lowQuality)
             ->withOptimize($this->optimize, $this->optimizeFormat)
-            ->process($file);
+            ->process($this->resolveProcessableSource($input, $file));
 
         foreach ($processedVariants->all() as $processedVariant) {
-            $saved = $this->driver->save($processedVariant->path, $folder);
+            $saved = $saver->save($processedVariant->path, $folder);
             $variants->add(new FileVariant($processedVariant->type, $saved->filePath));
         }
 
@@ -76,5 +135,24 @@ class ImageUploader
             variants: $variants,
             blurhash: $this->processor->getBlurhash()
         );
+    }
+
+    /**
+     * Resolve a source that Intervention Image can read.
+     *
+     * If the original file is a FileInput object, Intervention Image can't
+     * decode it directly since it doesn't implement SplFileInfo. We write
+     * the content to a temp file and return the path.
+     */
+    protected function resolveProcessableSource(FileInput $input, mixed $file): mixed
+    {
+        if ($file instanceof FileInput) {
+            $tmpPath = tempnam(sys_get_temp_dir(), 'fm_img_');
+            file_put_contents($tmpPath, $input->getContent());
+
+            return $tmpPath;
+        }
+
+        return $file;
     }
 }

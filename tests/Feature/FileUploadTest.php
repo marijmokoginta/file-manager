@@ -117,7 +117,7 @@ class FileUploadTest extends TestCase
         $raw = file_get_contents($realPath);
         self::assertNotFalse($raw);
 
-        $base64Png = 'data:image/png;base64,' . base64_encode($raw);
+        $base64Png = 'data:image/png;base64,'.base64_encode($raw);
 
         $res = ImageUploader::make()
             ->blur()
@@ -142,7 +142,7 @@ class FileUploadTest extends TestCase
         Storage::fake('public');
 
         $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><rect width="16" height="16"/></svg>';
-        $base64Svg = 'data:image/svg+xml;base64,' . base64_encode($svg);
+        $base64Svg = 'data:image/svg+xml;base64,'.base64_encode($svg);
 
         $res = ImageUploader::make()
             ->blur()

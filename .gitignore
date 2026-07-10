@@ -1,6 +1,21 @@
 /vendor/
-/docs/
 
+# IDE
 .idea
 
+# AI Agents (local config only)
+.opencode/
+.codex/
+.claude/
+.cursor/
+.gemini/
+.junie/
+.mcp.json
+opencode.json
+
+# Dependencies & cache
 composer.lock
+.phpunit.result.cache
+
+# Test artifacts
+tests/storage/

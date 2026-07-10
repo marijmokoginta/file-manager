@@ -8,7 +8,6 @@ use M2code\FileManager\Domain\Contracts\FileUrlGenerator;
 
 class LocalFileUrlGenerator implements FileUrlGenerator
 {
-
     protected const ROUTE_NAME = 'file-manager.serve';
 
     protected string $disk;
@@ -22,7 +21,7 @@ class LocalFileUrlGenerator implements FileUrlGenerator
     {
         return route(self::ROUTE_NAME, [
             'disk' => $this->disk,
-            'path' => $this->encodePath($path)
+            'path' => $this->encodePath($path),
         ]);
     }
 
@@ -30,7 +29,7 @@ class LocalFileUrlGenerator implements FileUrlGenerator
     {
         return URL::temporarySignedRoute(self::ROUTE_NAME, $expiresAt, [
             'disk' => $this->disk,
-            'path' => $this->encodePath($path)
+            'path' => $this->encodePath($path),
         ]);
     }
 

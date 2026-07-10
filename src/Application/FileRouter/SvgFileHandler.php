@@ -6,6 +6,7 @@ use M2code\FileManager\Application\FileInput\FileInput;
 use M2code\FileManager\Domain\Contracts\FileSaver;
 use M2code\FileManager\Domain\Contracts\FileTypeHandler;
 use M2code\FileManager\DTO\FileOperationResult;
+use M2code\FileManager\DTO\UploadResponse;
 
 class SvgFileHandler implements FileTypeHandler
 {
@@ -19,5 +20,29 @@ class SvgFileHandler implements FileTypeHandler
     public function handleSave(FileInput $input, string $folder): FileOperationResult
     {
         return $this->driver->save($input, $folder);
+    }
+
+    public function handleUpload(FileInput $input, string $folder, array $options): UploadResponse
+    {
+        $result = $this->driver->save($input, $folder);
+
+        return new UploadResponse(
+            type: 'svg',
+            tmpPath: $result->filePath,
+            tmpFolder: $folder,
+            originalName: $input->getClientOriginalName(),
+            size: strlen($input->getContent()),
+            mimeType: $input->getMimeType(),
+        );
+    }
+
+    public function supportedOptions(): array
+    {
+        return [];
+    }
+
+    public function defaultOptions(): array
+    {
+        return [];
     }
 }

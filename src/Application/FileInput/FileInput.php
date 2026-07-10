@@ -9,4 +9,6 @@ interface FileInput
     public function getMimeType(): string;
 
     public function getExtension(): string;
+
+    public function getClientOriginalName(): ?string;
 }

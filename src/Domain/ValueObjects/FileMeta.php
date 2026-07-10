@@ -5,8 +5,11 @@ namespace M2code\FileManager\Domain\ValueObjects;
 class FileMeta
 {
     public $name;
+
     public $mime;
+
     public $extension;
+
     public $size;
 
     public function __construct(

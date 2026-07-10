@@ -8,6 +8,7 @@ use M2code\FileManager\Facades\FileManager;
 class TestUploadCommand extends Command
 {
     protected $signature = 'file-manager:test-upload';
+
     protected $description = 'Test uploading dummy file using FileManager';
 
     public function handle()

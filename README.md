@@ -1,240 +1,83 @@
-# 🛠️ File Manager for Laravel (WIP)
+# File Manager for Laravel
 
-> ⚠️ **This package is currently under active development. Breaking changes may occur. Contributions are welcome!**
+[![PHP](https://img.shields.io/badge/PHP-^8.2-blue)](composer.json)
+[![Laravel](https://img.shields.io/badge/Laravel-10_|_11_|_12_|_13-red)](composer.json)
+[![Tests](https://img.shields.io/badge/tests-82_passing-brightgreen)](.)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-📦 A modular, clean-architecture-based Laravel package to manage file operations — image, video, documents — with support for multiple drivers (local, cloud, Firebase, etc), progressive images, and flexible configuration.
-
----
-
-## 🔧 Features
-
-- 📁 Save and delete files (single or batch)
-- 🧠 Auto-detect file type & handle accordingly
-- 🧾 Input-agnostic file handling (`UploadedFile`, base64 data URI, raw SVG string)
-- 🌁 Image processing (blurhash, low quality, watermark, optimized AVIF/WebP)
-- 🧩 Structured variants (`original`, `optimized`, `low_quality`, `watermark`)
-- ☁️ Extensible storage drivers: local, S3, Firebase, etc.
-- ⚙️ Clean architecture (DDD-friendly & testable)
-- 🧩 Facade and fluent Uploader API
-- 🔐 Support for signed/dynamic URLs
+A modular, clean-architecture Laravel package for file management — upload, process, store, and serve files across multiple drivers and file types.
 
 ---
 
-## 🚀 Installation
+## Requirements
+
+- PHP 8.2+ / Laravel 10–13 / Imagick PHP extension / `intervention/image` v3
+
+## Installation
 
 ```bash
 composer require m2code/file-manager
-```
-
-## 🛠 Publish Configuration
-```bash
 php artisan vendor:publish --tag=config --provider="M2code\FileManager\FileManagerServiceProvider"
 ```
 
-## 📂 Basic Usage
-### Save file using facade (no config):
+## Quick Start
+
 ```php
 use M2code\FileManager\Facades\FileManager;
-
-$result = FileManager::save($request->file('image'), 'uploads');
-$result->filePath;
-```
-
-### Save from base64 or raw SVG string:
-```php
-use M2code\FileManager\Facades\FileManager;
-
-// Base64 PNG
-$base64Png = 'data:image/png;base64,...';
-$png = FileManager::save($base64Png, 'uploads');
-
-// Base64 SVG
-$base64Svg = 'data:image/svg+xml;base64,...';
-$svgFromBase64 = FileManager::save($base64Svg, 'uploads');
-
-// Raw SVG string
-$svg = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64">...</svg>';
-$svgRaw = FileManager::save($svg, 'uploads');
-```
-
-### Upload image with processing:
-```php
 use M2code\FileManager\Application\Uploader\ImageUploader;
 
+// Save any file (UploadedFile, base64, SVG string)
+$result = FileManager::save($request->file('document'), 'uploads');
+
+// Upload and process an image
 $result = ImageUploader::make()
-    ->blur()
-    ->lowQuality()
-    ->watermark()
-    ->optimize('avif') // fallback to webp, or skipped if unsupported
-    ->upload($request->file('photo'), 'uploads/images');
+    ->blur()->optimize('avif')->watermark()
+    ->upload($request->file('photo'), 'uploads');
 
 $result->variants->get('original')?->path;
-$result->variants->get('optimized')?->path;
-$result->variants->get('low_quality')?->path;
-$result->variants->get('watermark')?->path;
 $result->blurhash;
 
-// Backward-compatible fields (still available):
-$result->path;
-$result->optimizedPath;
-$result->lowQualityPath;
-$result->watermarkPath;
-```
-
-### SVG behavior in ImageUploader
-```php
-$svg = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64">...</svg>';
-
-$result = ImageUploader::make()
-    ->blur()
-    ->lowQuality()
-    ->watermark()
-    ->optimize('avif')
-    ->upload($svg, 'uploads/images');
-
-// SVG only keeps original variant, raster processing is skipped:
-$result->variants->get('original')?->path;   // not null
-$result->variants->get('low_quality');       // null
-$result->variants->get('optimized');         // null
-$result->blurhash;                           // null
-```
-
-### Delete files:
-```php
-use M2code\FileManager\Facades\FileManager;
-
-FileManager::delete('uploads/images/file.jpg');
-
-FileManager::deleteMany([
-    'uploads/images/a.jpg',
-    'uploads/images/b.jpg',
-]);
-
-// Delete all variants from upload result:
+// Delete
+FileManager::delete('uploads/old.png');
 FileManager::deleteVariants($result->variants);
+
+// URLs
+$url = FileUrl::getUrl('uploads/photo.png');
+$signed = FileUrl::getSignedUrl('uploads/photo.png', now()->addHour());
 ```
-
-## 📡 Get file URL
-```php
-use M2code\FileManager\Facades\FileUrl;
-
-$url = FileUrl::getUrl('uploads/images/image.jpg'); // Local or driver-specific
-$signed = FileUrl::getSignedUrl('uploads/images/image.jpg', now()->addMinutes(5));
-```
-
-## 🗃 Supported Drivers
-- ✅ Local (default)
-- 🔜 S3, Firebase, Custom drivers
-
-Configure in `config/file-manager.php`:
-```php
-'default_driver' => 'local',
-'default_deleter' => 'local',
-'default_url_generator' => 'local',
-```
-
-## 🧩 Requirement: Imagick
-
-This package uses `intervention/image` with Imagick driver for image processing features such as:
-
-- Blurhash generation
-- Optimized AVIF/WebP variant generation
-- Low quality image variants
-- Watermark (when enabled)
-
-Imagick is required and declared in `composer.json` (`ext-imagick`).
 
 ---
 
-## ⚙️ Why Imagick?
+## Documentation
 
-Compared to GD:
-- Better image quality
-- Faster processing for large images
-- More advanced image manipulation capabilities
+### For Users
 
-If you're serious about handling images, GD is… let's say, “minimum effort mode”.
+| Document | Description |
+|----------|-------------|
+| [Getting Started](docs/client/getting-started.md) | Installation, requirements, Imagick setup |
+| [Usage Guide](docs/client/usage.md) | Facades, ImageUploader, FileMover, FileUrl, variants, deletion |
+| [HTTP Upload API](docs/client/http-api.md) | Endpoints, authentication, request/response formats, configuration |
+
+### For Developers
+
+| Document | Description |
+|----------|-------------|
+| [AGENTS.md](AGENTS.md) | Architecture conventions, DDD layers, code style, testing |
+| [PRD: Core Package](docs/prd/000-file-manager-core.md) | Product vision, scope, roadmap |
+| [PRD: File Upload API](docs/prd/001-file-upload-api.md) | Upload API feature requirements |
+| [ADR Index](docs/adr/) | Architecture decision records |
+| [Development Skills](docs/development/skills/) | Step-by-step guides for extending the package |
 
 ---
 
-## 💻 Installation Guide
+## Testing
 
-### 🪟 Windows
-
-1. Download Imagick DLL from:
-   👉 https://windows.php.net/downloads/pecl/releases/imagick/
-
-2. Choose version that matches:
-    - Your PHP version
-    - Thread safety (TS/NTS)
-    - Architecture (x64/x86)
-
-3. Copy `.dll` file to:
-`ext/`
-
-4. Enable in `php.ini`:
-```ini
-extension=imagick
-```
-
-5. Restart your web server
-
-### 🍎 macOS
-Using Homebrew:
 ```bash
-brew install imagemagick
-pecl install imagick
+vendor/bin/phpunit -c phpunit.xml
 ```
 
-Then enable in php.ini:
-```ini
-extension=imagick
-```
+---
 
-### 🐧 Linux (Ubuntu/Debian)
-```bash
-sudo apt update
-sudo apt install imagemagick
-sudo apt install php-imagick
-```
+## License
 
-Restart PHP / Web Server:
-```bash
-sudo service php-fpm restart
-# or
-sudo service apache2 restart
-```
-
-### 🐧 Linux (CentOS/RHEL)
-```bash
-sudo yum install epel-release
-sudo yum install ImageMagick ImageMagick-devel
-sudo pecl install imagick
-```
-
-Enable in php.ini:
-```ini
-extension=imagick
-```
-
-## ✅ Verify Installation
-Run:
-```php
-php -m | grep imagick
-```
-
-If installed correctly, you should see:
-```bash
-imagick
-```
-
-## ✅ Current Stable Flow
-
-- Upload image (with optional variants)
-- Upload from `UploadedFile`, base64 data URI, or raw SVG string
-- Read variant paths from `ImageUploadResult::variants`
-- Generate URL / signed URL
-- Delete single file / batch / all variants safely
-
-## 📄 License
-[MIT License](LICENSE) © Marij Mokoginta (M2code)
+[MIT License](LICENSE) — Marij Mokoginta (M2code)

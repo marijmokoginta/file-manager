@@ -57,12 +57,12 @@ class GenerateOptimizedImageAction
 
     protected function supportsImagickFormat(string $format): bool
     {
-        if (!extension_loaded('imagick') || !class_exists(Imagick::class)) {
+        if (! extension_loaded('imagick') || ! class_exists(Imagick::class)) {
             return false;
         }
 
         try {
-            return !empty(Imagick::queryFormats($format));
+            return ! empty(Imagick::queryFormats($format));
         } catch (Throwable) {
             return false;
         }

@@ -2,6 +2,8 @@
 
 namespace M2code\FileManager;
 
+use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use M2code\FileManager\Application\FileManagerService;
 use M2code\FileManager\Application\FileRouter\FileTypeRouterService;
@@ -14,17 +16,21 @@ use M2code\FileManager\Application\Image\Actions\GenerateLowQualityAction;
 use M2code\FileManager\Application\Image\Actions\GenerateOptimizedImageAction;
 use M2code\FileManager\Application\Image\ImageProcessor;
 use M2code\FileManager\Application\Uploader\ImageUploader;
+use M2code\FileManager\Application\UploadService;
+use M2code\FileManager\Console\CleanTmpUploadsCommand;
 use M2code\FileManager\Console\TestUploadCommand;
 use M2code\FileManager\Core\FileDeleterResolver;
 use M2code\FileManager\Core\FileDriverResolver;
 use M2code\FileManager\Core\FileUrlGeneratorResolver;
 use M2code\FileManager\Domain\Contracts\FileDeleter;
+use M2code\FileManager\Domain\Contracts\FileMover;
 use M2code\FileManager\Domain\Contracts\FileSaver;
 use M2code\FileManager\Domain\Contracts\FileUrlGenerator;
+use M2code\FileManager\Drivers\Local\LocalFileMover;
+use M2code\FileManager\Http\Middleware\FileManagerApiAuth;
 
 class FileManagerServiceProvider extends ServiceProvider
 {
-
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/config/file-manager.php', 'file-manager');
@@ -45,10 +51,10 @@ class FileManagerServiceProvider extends ServiceProvider
             return FileDeleterResolver::resolve();
         });
 
-        $this->app->bind(GenerateBlurAction::class, fn () => new GenerateBlurAction());
-        $this->app->bind(GenerateLowQualityAction::class, fn () => new GenerateLowQualityAction());
-        $this->app->bind(ApplyWatermarkAction::class, fn () => new ApplyWatermarkAction());
-        $this->app->bind(GenerateOptimizedImageAction::class, fn () => new GenerateOptimizedImageAction());
+        $this->app->bind(GenerateBlurAction::class, fn () => new GenerateBlurAction);
+        $this->app->bind(GenerateLowQualityAction::class, fn () => new GenerateLowQualityAction);
+        $this->app->bind(ApplyWatermarkAction::class, fn () => new ApplyWatermarkAction);
+        $this->app->bind(GenerateOptimizedImageAction::class, fn () => new GenerateOptimizedImageAction);
 
         $this->app->bind(ImageProcessor::class, function ($app) {
             return new ImageProcessor(
@@ -86,21 +92,51 @@ class FileManagerServiceProvider extends ServiceProvider
         $this->app->singleton('file-url', function () {
             return app(FileUrlGenerator::class);
         });
+
+        $this->app->singleton(UploadService::class, fn () => new UploadService);
+
+        $this->app->bind(FileMover::class, function () {
+            $deleterConfig = config('file-manager.deleters.local', []);
+
+            return new LocalFileMover($deleterConfig);
+        });
+
+        $this->app->singleton('file-mover', function () {
+            return app(FileMover::class);
+        });
     }
 
     public function boot(): void
     {
         $this->publishes([
-            __DIR__.'/config/file-manager.php' => config_path('file-manager.php')
+            __DIR__.'/config/file-manager.php' => config_path('file-manager.php'),
         ], 'config');
+
+        $this->registerMiddleware();
 
         $this->loadRoutesFrom(__DIR__.'/Http/routes.php');
 
         if ($this->app->runningInConsole()) {
             $this->commands([
-                TestUploadCommand::class
+                TestUploadCommand::class,
+                CleanTmpUploadsCommand::class,
             ]);
+
+            $this->registerScheduler();
         }
     }
 
+    protected function registerMiddleware(): void
+    {
+        $router = $this->app->make(Router::class);
+
+        $router->aliasMiddleware('file-manager.api', FileManagerApiAuth::class);
+    }
+
+    protected function registerScheduler(): void
+    {
+        $this->callAfterResolving(Schedule::class, function (Schedule $schedule) {
+            $schedule->command('file-manager:clean-tmp')->daily();
+        });
+    }
 }

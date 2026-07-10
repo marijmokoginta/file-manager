@@ -18,7 +18,7 @@ class FileUrlGeneratorResolver
 
         $generatorConfig = $generators[$active] ?? null;
 
-        if (!$generatorConfig || !class_exists($generatorConfig['class'])) {
+        if (! $generatorConfig || ! class_exists($generatorConfig['class'])) {
             throw new RuntimeException("FileManager: Invalid URL generator [$active]");
         }
 
