@@ -2,7 +2,7 @@
 
 [![PHP](https://img.shields.io/badge/PHP-^8.2-blue)](composer.json)
 [![Laravel](https://img.shields.io/badge/Laravel-10_|_11_|_12_|_13-red)](composer.json)
-[![Tests](https://img.shields.io/badge/tests-82_passing-brightgreen)](.)
+[![Tests](https://img.shields.io/badge/tests-122_passing-brightgreen)](.)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 A modular, clean-architecture Laravel package for file management — upload, process, store, and serve files across multiple drivers and file types.
@@ -24,6 +24,7 @@ php artisan vendor:publish --tag=config --provider="M2code\FileManager\FileManag
 
 ```php
 use M2code\FileManager\Facades\FileManager;
+use M2code\FileManager\Facades\FileUrl;
 use M2code\FileManager\Application\Uploader\ImageUploader;
 
 // Save any file (UploadedFile, base64, SVG string)
@@ -36,6 +37,11 @@ $result = ImageUploader::make()
 
 $result->variants->get('original')?->path;
 $result->blurhash;
+
+// Upload with encryption (requires FILE_MANAGER_ENCRYPTION_ENABLED=true)
+$result = ImageUploader::make()
+    ->encrypted()
+    ->upload($request->file('receipt'), 'invoices');
 
 // Delete
 FileManager::delete('uploads/old.png');

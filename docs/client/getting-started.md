@@ -83,7 +83,25 @@ FILE_MANAGER_DISK=public
 FILE_MANAGER_API_TOKEN=your-secret-token-here
 ```
 
-The complete list of environment variables is documented in [Configuration](configuration.md).
+### Optional — File Encryption at Rest
+
+Enable to encrypt file content before writing to disk. Files are decrypted on-the-fly when served.
+
+```env
+FILE_MANAGER_ENCRYPTION_ENABLED=true
+FILE_MANAGER_ENCRYPTION_DRIVER=laravel        # 'laravel' (default) or 'openssl'
+FILE_MANAGER_ENCRYPTION_KEY=                  # required when driver=openssl
+```
+
+### Optional — Secure URL Paths
+
+When set, file paths in URLs are encrypted with AES-256-CBC instead of plain base64. Legacy base64-encoded URLs from previous versions remain valid (backward compatible).
+
+```env
+FILE_MANAGER_URL_SECRET=your-secret-key-here
+```
+
+See the [Usage Guide](usage.md) for details on both features.
 
 ## Next Steps
 

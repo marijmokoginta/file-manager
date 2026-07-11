@@ -7,7 +7,7 @@ The package exposes three facades for the most common operations.
 | Facade | Container Binding | Primary Methods |
 |--------|------------------|----------------|
 | `FileManager` | `file-manager` | `save()`, `delete()`, `deleteMany()`, `deleteVariants()` |
-| `FileUrl` | `file-url` | `getUrl()`, `getSignedUrl()` |
+| `FileUrl` | `file-url` | `getUrl()`, `getSignedUrl()`, `decodePath()` |
 | `FileMover` | `file-mover` | `move()`, `moveAll()` |
 
 ## Saving Files
@@ -71,6 +71,9 @@ $result->watermarkPath;         // alias for watermark
 | `->optimize('avif')` | `optimize` | `false` | AVIF/WebP optimized variant |
 | `->watermark()` | `watermark` | `false` | Watermark overlay |
 | `->lowQuality()` | `low_quality` | `false` | Low quality JPEG placeholder |
+| `->encrypted()` | `encrypted` | `null`¹ | Enable/disable file encryption |
+
+¹ `null` = follow `FILE_MANAGER_ENCRYPTION_ENABLED` config. Set `true` or `false` to override per-upload.
 
 Use `->withOptions([])` to pass options as an array:
 
@@ -155,7 +158,81 @@ $url = FileUrl::getUrl('avatars/photo.png');
 $signed = FileUrl::getSignedUrl('avatars/photo.png', now()->addHour());
 ```
 
-URLs resolve through `GET /file/{disk}/{path}` with the path base64-encoded.
+URLs resolve through `GET /file/{disk}/{path}`.
+
+### Path Encoding
+
+By default, the file path is base64-encoded in the URL. When `FILE_MANAGER_URL_SECRET` is configured, paths are **encrypted with AES-256-CBC** instead — making them indecipherable to third parties.
+
+```env
+# .env — enable encrypted paths
+FILE_MANAGER_URL_SECRET=your-secret-key
+```
+
+Legacy base64-encoded URLs remain valid after enabling the secret. The `FileController` automatically detects and decodes both formats.
+
+### Decoding Paths
+
+```php
+// Reverse a URL-encoded path back to the original file path
+$originalPath = FileUrl::decodePath($encodedPath);
+// Supports both encrypted and legacy base64 formats
+// Returns null if decoding fails
+```
+
+## File Encryption at Rest
+
+When enabled, file content is encrypted before writing to disk and decrypted on-the-fly when served via `FileController`.
+
+### Configuration
+
+```env
+# .env
+FILE_MANAGER_ENCRYPTION_ENABLED=true
+FILE_MANAGER_ENCRYPTION_DRIVER=laravel    # 'laravel' | 'openssl'
+FILE_MANAGER_ENCRYPTION_KEY=              # required when driver=openssl
+```
+
+Two encryption drivers are supported:
+
+| Driver | Key Source | Notes |
+|--------|-----------|-------|
+| `laravel` (default) | `APP_KEY` from `.env` | Uses Laravel's `Crypt` facade. No additional setup required. |
+| `openssl` | `FILE_MANAGER_ENCRYPTION_KEY` (min 32 chars) | Pure PHP OpenSSL. Framework-agnostic. Must set a custom key. |
+
+### Per-Operation Override
+
+Override the config default for individual operations:
+
+```php
+use M2code\FileManager\Facades\FileManager;
+use M2code\FileManager\Application\Uploader\ImageUploader;
+
+// Disable encryption for this specific save
+FileManager::save($file, 'public', encrypted: false);
+
+// Enable encryption via ImageUploader fluent API
+$result = ImageUploader::make()
+    ->encrypted()                       // force encrypt
+    ->upload($file, 'invoices');
+
+// Disable encryption via options array
+$result = ImageUploader::make()
+    ->withOptions(['encrypted' => false])
+    ->upload($file, 'invoices');
+```
+
+### How It Works
+
+1. **On save**: `LocalFileSaver` encrypts content via `ContentEncryptor` before `Storage::put()`
+2. **On serve**: `FileController` decrypts content via `ContentEncryptor::decrypt()` before returning the response
+3. **On move**: `LocalFileMover` delegates writes to `FileSaver::save()`, which handles encryption consistently
+
+### Backward Compatibility
+
+- When encryption is **disabled** (default): files saved as plaintext (same as previous versions)
+- When encryption is **enabled**: new files are encrypted, existing plaintext files are served as-is
+- If encryption is enabled and later disabled: new files are plaintext, previously encrypted files are served as plaintext (best-effort fallback)
 
 ## Deleting Files
 
