@@ -9,6 +9,7 @@ use M2code\FileManager\Application\UploadService;
 use M2code\FileManager\tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 use RuntimeException;
+use ZipArchive;
 
 class UploadServiceTest extends TestCase
 {
@@ -106,6 +107,49 @@ class UploadServiceTest extends TestCase
         $this->assertEquals('application/pdf', $result->mimeType);
         $this->assertEmpty($result->extra);
         Storage::disk('tmp')->assertExists($result->tmpPath);
+    }
+
+    #[Test]
+    public function it_uploads_word_docx_file_as_document(): void
+    {
+        $docx = $this->createDocxUploadedFile('memo.docx');
+
+        $result = $this->service->upload($docx);
+
+        $this->assertEquals('document', $result->type);
+        $this->assertEquals(UploadService::MIME_WORDPROCESSINGML, $result->mimeType);
+        $this->assertEquals('memo.docx', $result->originalName);
+        $this->assertEmpty($result->extra);
+        Storage::disk('tmp')->assertExists($result->tmpPath);
+    }
+
+    #[Test]
+    public function it_maps_word_mime_to_document_size_category(): void
+    {
+        // 12 MiB docx: above the 10240 KiB 'default' cap, below the 20480
+        // KiB 'document' cap — must pass validateSize (document category),
+        // not throw the 'default' RuntimeException.
+        config()->set('file-manager.validation.max_file_size.document', 15360); // 15 MiB
+
+        $docx = $this->createDocxUploadedFile('big.docx', 12 * 1024);
+
+        $result = $this->service->upload($docx);
+
+        $this->assertEquals('document', $result->type);
+        Storage::disk('tmp')->assertExists($result->tmpPath);
+    }
+
+    #[Test]
+    public function it_rejects_oversized_word_docx_with_document_category(): void
+    {
+        config()->set('file-manager.validation.max_file_size.document', 1); // 1 KiB
+
+        $docx = $this->createDocxUploadedFile('big.docx', 100);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessageMatches('/for document files/');
+
+        $this->service->upload($docx);
     }
 
     #[Test]
@@ -254,5 +298,35 @@ class UploadServiceTest extends TestCase
         $this->service->cancel($token);
 
         $this->assertTrue($this->service->isCancelled($token));
+    }
+
+    /**
+     * Build a real OOXML (.docx) UploadedFile: ZIP container with a
+     * [Content_Types].xml declaring the wordprocessingml document part —
+     * the shape libmagic sniffs as wordprocessingml.document.
+     */
+    private function createDocxUploadedFile(string $name, int $sizeKiB = 0): UploadedFile
+    {
+        $contentTypes = <<<'XML'
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="xml" ContentType="application/xml"/>
+<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>
+XML;
+
+        $tmpPath = tempnam(sys_get_temp_dir(), 'fm_docx_');
+        $zip = new ZipArchive;
+        $zip->open($tmpPath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+        $zip->addFromString('[Content_Types].xml', $contentTypes);
+        $zip->addFromString('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>');
+        $zip->addFromString('word/document.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body/></w:document>');
+        if ($sizeKiB > 0) {
+            $zip->addFromString('word/payload.bin', str_repeat("\0", $sizeKiB * 1024));
+        }
+        $zip->close();
+
+        return new UploadedFile($tmpPath, $name, UploadService::MIME_WORDPROCESSINGML, null, true);
     }
 }
