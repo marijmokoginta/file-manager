@@ -14,9 +14,9 @@ class FileManagerService
         protected FileDeleter $deleter
     ) {}
 
-    public function save($file, string $folder): FileOperationResult
+    public function save($file, string $folder, ?bool $encrypted = null): FileOperationResult
     {
-        return $this->saver->save($file, $folder);
+        return $this->saver->save($file, $folder, encrypted: $encrypted);
     }
 
     public function delete(string $path): bool

@@ -3,7 +3,9 @@
 namespace M2code\FileManager\Core;
 
 use Illuminate\Contracts\Container\BindingResolutionException;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
+use M2code\FileManager\Domain\Contracts\ContentEncryptor;
 use M2code\FileManager\Domain\Contracts\FileSaver;
 use RuntimeException;
 
@@ -23,6 +25,11 @@ class FileDriverResolver
             throw new RuntimeException("FileManager: Invalid driver [$active]");
         }
 
-        return app()->make($driverConfig['class'], ['config' => $driverConfig]);
+        $encryptor = App::make(ContentEncryptor::class);
+
+        return app()->make($driverConfig['class'], [
+            'config' => $driverConfig,
+            'encryptor' => $encryptor,
+        ]);
     }
 }

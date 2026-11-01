@@ -17,9 +17,9 @@ class SvgFileHandler implements FileTypeHandler
         return strtolower($input->getMimeType()) === 'image/svg+xml';
     }
 
-    public function handleSave(FileInput $input, string $folder): FileOperationResult
+    public function handleSave(FileInput $input, string $folder, ?string $fileName = null, ?bool $encrypted = null): FileOperationResult
     {
-        return $this->driver->save($input, $folder);
+        return $this->driver->save($input, $folder, $fileName, $encrypted);
     }
 
     public function handleUpload(FileInput $input, string $folder, array $options): UploadResponse
