@@ -10,6 +10,7 @@ use M2code\FileManager\Application\FileRouter\FileTypeRouterService;
 use M2code\FileManager\Application\FileRouter\ImageFileHandler;
 use M2code\FileManager\Application\FileRouter\PdfFileHandler;
 use M2code\FileManager\Application\FileRouter\SvgFileHandler;
+use M2code\FileManager\Application\FileRouter\WordFileHandler;
 use M2code\FileManager\Application\Image\Actions\ApplyWatermarkAction;
 use M2code\FileManager\Application\Image\Actions\GenerateBlurAction;
 use M2code\FileManager\Application\Image\Actions\GenerateLowQualityAction;
@@ -41,6 +42,7 @@ class FileManagerServiceProvider extends ServiceProvider
             return new FileTypeRouterService([
                 new SvgFileHandler($driver),
                 new PdfFileHandler($driver),
+                new WordFileHandler($driver),
                 new ImageFileHandler($driver),
 
                 // Other handlers

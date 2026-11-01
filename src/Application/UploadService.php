@@ -10,6 +10,7 @@ use M2code\FileManager\Application\FileInput\FileInputFactory;
 use M2code\FileManager\Application\FileRouter\ImageFileHandler;
 use M2code\FileManager\Application\FileRouter\PdfFileHandler;
 use M2code\FileManager\Application\FileRouter\SvgFileHandler;
+use M2code\FileManager\Application\FileRouter\WordFileHandler;
 use M2code\FileManager\Application\Uploader\ImageUploader;
 use M2code\FileManager\Domain\Contracts\FileSaver;
 use M2code\FileManager\Domain\Contracts\FileTypeHandler;
@@ -20,6 +21,12 @@ use Throwable;
 
 class UploadService
 {
+    /**
+     * MIME Word OOXML (wordprocessingml) — kategori size 'document'
+     * (bukan 'default' 10240 KiB).
+     */
+    public const string MIME_WORDPROCESSINGML = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
     public function upload(mixed $file, array $options = [], ?string $cancelToken = null): UploadResponse
     {
         $this->assertNotCancelled($cancelToken);
@@ -102,6 +109,7 @@ class UploadService
         $handlers = [
             new SvgFileHandler($tmpDriver),
             new PdfFileHandler($tmpDriver),
+            new WordFileHandler($tmpDriver),
             new ImageFileHandler($tmpDriver, app(ImageUploader::class)),
         ];
 
@@ -141,6 +149,10 @@ class UploadService
         }
 
         if ($mimeType === 'application/pdf') {
+            return 'document';
+        }
+
+        if ($mimeType === self::MIME_WORDPROCESSINGML) {
             return 'document';
         }
 
